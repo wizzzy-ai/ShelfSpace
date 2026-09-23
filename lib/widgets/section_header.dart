@@ -29,20 +29,40 @@ class SectionHeader extends StatelessWidget {
             child: Text(
               title,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
                     color: AppColors.dark,
+                    fontWeight: FontWeight.bold,
                   ),
             ),
           ),
           if (callback != null)
             TextButton(
               onPressed: callback,
-              child: Text(
-                label,
-                style: const TextStyle(
-                  color: AppColors.burgundy,
-                  fontWeight: FontWeight.w600,
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 4,
                 ),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      color: AppColors.burgundy,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(width: 2),
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 15,
+                    color: AppColors.burgundy,
+                  ),
+                ],
               ),
             ),
         ],

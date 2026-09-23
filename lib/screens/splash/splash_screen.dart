@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../widgets/shelfspace_loader.dart';
 import '../onboarding/onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -101,10 +102,15 @@ class _SplashScreenState extends State<SplashScreen>
                     color: AppColors.cream,
                     borderRadius: BorderRadius.circular(28),
                   ),
-                  child: const Icon(
-                    Icons.auto_stories_rounded,
-                    size: 48,
-                    color: AppColors.burgundy,
+                  child: Image.asset(
+                    'assets/images/ShelfSpace.jpg',
+                    errorBuilder: (_, __, ___) {
+                      return const Icon(
+                        Icons.auto_stories_rounded,
+                        size: 48,
+                        color: AppColors.burgundy,
+                      );
+                    },
                   ),
                 ),
 
@@ -112,7 +118,7 @@ class _SplashScreenState extends State<SplashScreen>
 
                 // App name
                 Text(
-                  'BIBLIRA',
+                  'SHELFSPACE',
                   style: GoogleFonts.playfairDisplay(
                     color: AppColors.cream,
                     fontSize: 38,
@@ -137,13 +143,10 @@ class _SplashScreenState extends State<SplashScreen>
                 const SizedBox(height: 55),
 
                 // Loading indicator
-                SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.cream.withValues(alpha: 0.8),
-                  ),
+                const ShelfSpaceLoader(
+                  size: 40,
+                  stroke: 4,
+                  color: AppColors.cream,
                 ),
               ],
             ),

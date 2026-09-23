@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../models/book.dart';
 import '../../services/mock_book_service.dart';
+import '../../widgets/app_state_view.dart';
+import '../../widgets/book_card.dart';
 import '../books/book_details_screen.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -14,84 +16,43 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
-  final FocusNode _searchFocusNode = FocusNode();
 
-  List<Book> _searchResults = [];
-  bool _hasSearched = false;
+  final List<String> _recentSearches = [
+    'Atomic Habits',
+    'The Silent Patient',
+  ];
 
-  String? _selectedGenre;
-  double _minPrice = 0;
+  final List<String> _popularSearches = [
+    'Fiction',
+    'Romance',
+    'Mystery',
+    'Business',
+    'Self Development',
+  ];
+
+  String _selectedGenre = 'All';
   double _maxPrice = 10000;
   double _minRating = 0;
   String _sortBy = 'Popularity';
 
-  final List<String> _genres = [
-    'All',
-    'Fiction',
-    'Romance',
-    'Mystery',
-    'Thriller',
-    'Business',
-    'Self Development',
-    'Classic',
-    'Lifestyle',
-  ];
+  bool get _hasSearch =>
+      _searchController.text.trim().isNotEmpty;
 
-  final List<String> _popularSearches = [
-    'Atomic Habits',
-    'The Alchemist',
-    'Mystery',
-    'Fiction',
-    'Self Development',
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _searchController.addListener(_onSearchChanged);
-  }
-
-  @override
-  void dispose() {
-    _searchController.removeListener(_onSearchChanged);
-    _searchController.dispose();
-    _searchFocusNode.dispose();
-    super.dispose();
-  }
-
-  void _onSearchChanged() {
-    _applySearchAndFilters();
-  }
-
-  void _applySearchAndFilters() {
+  List<Book> get _filteredBooks {
     final query = _searchController.text.trim().toLowerCase();
 
-    if (query.isEmpty) {
-      setState(() {
-        _searchResults = [];
-        _hasSearched = false;
-      });
-      return;
-    }
+    List<Book> results = MockBookService.books.where((book) {
+      final matchesSearch = query.isEmpty ||
+          book.title.toLowerCase().contains(query) ||
+          book.author.toLowerCase().contains(query) ||
+          book.genre.toLowerCase().contains(query) ||
+          book.description.toLowerCase().contains(query);
 
-    var results = MockBookService.books.where((book) {
-      final title = book.title.toLowerCase();
-      final author = book.author.toLowerCase();
-      final genre = book.genre.toLowerCase();
-      final description = book.description.toLowerCase();
+      final matchesGenre = _selectedGenre == 'All' ||
+          book.genre.toLowerCase() ==
+              _selectedGenre.toLowerCase();
 
-      final matchesSearch = title.contains(query) ||
-          author.contains(query) ||
-          genre.contains(query) ||
-          description.contains(query);
-
-      final matchesGenre =
-          _selectedGenre == null ||
-          _selectedGenre == 'All' ||
-          book.genre.toLowerCase() == _selectedGenre!.toLowerCase();
-
-      final matchesPrice =
-          book.price >= _minPrice && book.price <= _maxPrice;
+      final matchesPrice = book.price <= _maxPrice;
 
       final matchesRating = book.rating >= _minRating;
 
@@ -101,72 +62,50 @@ class _SearchScreenState extends State<SearchScreen> {
           matchesRating;
     }).toList();
 
-    _sortResults(results);
-
-    setState(() {
-      _searchResults = results;
-      _hasSearched = true;
-    });
-  }
-
-  void _sortResults(List<Book> results) {
     switch (_sortBy) {
       case 'Price: Low → High':
-        results.sort((a, b) => a.price.compareTo(b.price));
+        results.sort(
+          (a, b) => a.price.compareTo(b.price),
+        );
         break;
 
       case 'Price: High → Low':
-        results.sort((a, b) => b.price.compareTo(a.price));
+        results.sort(
+          (a, b) => b.price.compareTo(a.price),
+        );
         break;
 
       case 'Newest':
-        results.sort((a, b) {
-          if (a.isNewArrival && !b.isNewArrival) return -1;
-          if (!a.isNewArrival && b.isNewArrival) return 1;
-          return 0;
-        });
+        results.sort(
+          (a, b) {
+            if (a.isNewArrival == b.isNewArrival) {
+              return 0;
+            }
+
+            return a.isNewArrival ? -1 : 1;
+          },
+        );
         break;
 
       case 'Popularity':
       default:
-        results.sort((a, b) => b.reviewCount.compareTo(a.reviewCount));
+        results.sort(
+          (a, b) => b.reviewCount.compareTo(a.reviewCount),
+        );
         break;
     }
-  }
 
-  void _searchPopular(String search) {
-    _searchController.text = search;
-    _searchFocusNode.unfocus();
-  }
-
-  void _clearSearch() {
-    _searchController.clear();
-    _searchFocusNode.requestFocus();
-  }
-
-  void _openBookDetails(Book book) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => BookDetailsScreen(
-          book: book,
-          similarBooks: MockBookService.books
-              .where((item) => item.id != book.id)
-              .take(3)
-              .toList(),
-        ),
-      ),
-    );
+    return results;
   }
 
   int get _activeFilterCount {
     int count = 0;
 
-    if (_selectedGenre != null && _selectedGenre != 'All') {
+    if (_selectedGenre != 'All') {
       count++;
     }
 
-    if (_minPrice > 0 || _maxPrice < 10000) {
+    if (_maxPrice < 10000) {
       count++;
     }
 
@@ -181,245 +120,317 @@ class _SearchScreenState extends State<SearchScreen> {
     return count;
   }
 
-  void _showFilters() {
-    String? tempGenre = _selectedGenre;
-    double tempMinPrice = _minPrice;
-    double tempMaxPrice = _maxPrice;
-    double tempRating = _minRating;
-    String tempSort = _sortBy;
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() {
+      setState(() {});
+    });
+  }
 
-    showModalBottomSheet(
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _performSearch(String value) {
+    final query = value.trim();
+
+    if (query.isEmpty) {
+      return;
+    }
+
+    if (!_recentSearches.contains(query)) {
+      setState(() {
+        _recentSearches.insert(0, query);
+
+        if (_recentSearches.length > 5) {
+          _recentSearches.removeLast();
+        }
+      });
+    }
+
+    FocusScope.of(context).unfocus();
+  }
+
+  void _useSearch(String value) {
+    _searchController.text = value;
+    _searchController.selection = TextSelection.fromPosition(
+      TextPosition(
+        offset: _searchController.text.length,
+      ),
+    );
+
+    _performSearch(value);
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    FocusScope.of(context).unfocus();
+  }
+
+  void _showFilters() {
+    String tempGenre = _selectedGenre;
+    double tempMaxPrice = _maxPrice;
+    double tempMinRating = _minRating;
+    String tempSortBy = _sortBy;
+
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.cream,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(28),
-        ),
-      ),
-      builder: (context) {
+      builder: (sheetContext) {
         return StatefulBuilder(
-          builder: (context, setModalState) {
+          builder: (context, setSheetState) {
             return SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                   20,
-                  12,
+                  16,
                   20,
-                  20,
+                  24,
                 ),
                 child: SingleChildScrollView(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
                     children: [
                       Center(
                         child: Container(
-                          width: 42,
-                          height: 5,
+                          width: 45,
+                          height: 4,
                           decoration: BoxDecoration(
                             color: AppColors.border,
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius:
+                                BorderRadius.circular(10),
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 20),
-
                       Row(
                         children: [
-                          Text(
-                            'Filters & Sort',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                          Expanded(
+                            child: Text(
+                              'Filters & Sort',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headlineSmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
                           ),
-                          const Spacer(),
                           TextButton(
                             onPressed: () {
-                              setModalState(() {
-                                tempGenre = null;
-                                tempMinPrice = 0;
+                              setSheetState(() {
+                                tempGenre = 'All';
                                 tempMaxPrice = 10000;
-                                tempRating = 0;
-                                tempSort = 'Popularity';
+                                tempMinRating = 0;
+                                tempSortBy = 'Popularity';
                               });
                             },
-                            child: const Text('Reset'),
+                            child: const Text(
+                              'Reset',
+                              style: TextStyle(
+                                color:
+                                    AppColors.burgundy,
+                              ),
+                            ),
                           ),
                         ],
                       ),
-
-                      const SizedBox(height: 24),
-
-                      _sectionTitle('Genre'),
-
-                      const SizedBox(height: 12),
-
+                      const SizedBox(height: 22),
+                      const Text(
+                        'Genre',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: _genres.map((genre) {
+                        children: [
+                          'All',
+                          'Fiction',
+                          'Romance',
+                          'Thriller',
+                          'Mystery',
+                          'Classic',
+                          'Self Development',
+                          'Lifestyle',
+                        ].map((genre) {
                           final selected =
-                              tempGenre == genre ||
-                              (genre == 'All' && tempGenre == null);
+                              tempGenre == genre;
 
                           return ChoiceChip(
                             label: Text(genre),
                             selected: selected,
                             onSelected: (_) {
-                              setModalState(() {
-                                tempGenre =
-                                    genre == 'All' ? null : genre;
+                              setSheetState(() {
+                                tempGenre = genre;
                               });
                             },
-                            selectedColor: AppColors.burgundy,
-                            backgroundColor: AppColors.white,
+                            selectedColor:
+                                AppColors.burgundy
+                                    .withValues(
+                              alpha: 0.10,
+                            ),
+                            side: BorderSide(
+                              color: selected
+                                  ? AppColors.burgundy
+                                  : AppColors.border,
+                            ),
                             labelStyle: TextStyle(
                               color: selected
-                                  ? AppColors.white
+                                  ? AppColors.burgundy
                                   : AppColors.dark,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: selected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
                             ),
                           );
                         }).toList(),
                       ),
-
-                      const SizedBox(height: 28),
-
-                      _sectionTitle('Price Range'),
-
-                      const SizedBox(height: 10),
-
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Maximum Price',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
                       Text(
-                        '₦${tempMinPrice.toStringAsFixed(0)} — '
                         '₦${tempMaxPrice.toStringAsFixed(0)}',
                         style: const TextStyle(
                           color: AppColors.burgundy,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-
-                      RangeSlider(
-                        values: RangeValues(
-                          tempMinPrice,
-                          tempMaxPrice,
-                        ),
+                      Slider(
+                        value: tempMaxPrice,
                         min: 0,
                         max: 10000,
                         divisions: 20,
-                        activeColor: AppColors.burgundy,
-                        onChanged: (values) {
-                          setModalState(() {
-                            tempMinPrice = values.start;
-                            tempMaxPrice = values.end;
+                        activeColor:
+                            AppColors.burgundy,
+                        inactiveColor:
+                            AppColors.border,
+                        onChanged: (value) {
+                          setSheetState(() {
+                            tempMaxPrice = value;
                           });
                         },
                       ),
-
-                      const SizedBox(height: 16),
-
-                      _sectionTitle('Minimum Rating'),
-
+                      const SizedBox(height: 18),
+                      const Text(
+                        'Minimum Rating',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       const SizedBox(height: 10),
-
                       Wrap(
                         spacing: 8,
-                        children: [0, 3, 4, 4.5].map((rating) {
-                          final selected = tempRating == rating;
+                        children: [0.0, 3.0, 4.0, 4.5]
+                            .map((rating) {
+                          final selected =
+                              tempMinRating == rating;
 
                           return ChoiceChip(
-                            label: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (rating > 0) ...[
-                                  const Icon(
-                                    Icons.star_rounded,
-                                    size: 16,
-                                    color: Colors.amber,
-                                  ),
-                                  const SizedBox(width: 3),
-                                ],
-                                Text(
-                                  rating == 0
-                                      ? 'All'
-                                      : '$rating+',
-                                ),
-                              ],
+                            label: Text(
+                              rating == 0
+                                  ? 'Any'
+                                  : '${rating.toStringAsFixed(1)}+',
                             ),
                             selected: selected,
                             onSelected: (_) {
-                              setModalState(() {
-                                tempRating = rating.toDouble();
+                              setSheetState(() {
+                                tempMinRating = rating;
                               });
                             },
-                            selectedColor: AppColors.burgundy,
-                            backgroundColor: AppColors.white,
+                            selectedColor:
+                                AppColors.burgundy
+                                    .withValues(
+                              alpha: 0.10,
+                            ),
+                            side: BorderSide(
+                              color: selected
+                                  ? AppColors.burgundy
+                                  : AppColors.border,
+                            ),
                             labelStyle: TextStyle(
                               color: selected
-                                  ? AppColors.white
+                                  ? AppColors.burgundy
                                   : AppColors.dark,
                             ),
                           );
                         }).toList(),
                       ),
-
-                      const SizedBox(height: 28),
-
-                      _sectionTitle('Sort By'),
-
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Sort By',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       const SizedBox(height: 10),
-
                       DropdownButtonFormField<String>(
-                        value: tempSort,
+                        initialValue: tempSortBy,
                         decoration: const InputDecoration(
                           prefixIcon: Icon(
                             Icons.sort_rounded,
-                            color: AppColors.burgundy,
                           ),
                         ),
                         items: const [
-                          'Popularity',
-                          'Price: Low → High',
-                          'Price: High → Low',
-                          'Newest',
-                        ].map((sort) {
-                          return DropdownMenuItem(
-                            value: sort,
-                            child: Text(sort),
-                          );
-                        }).toList(),
+                          DropdownMenuItem(
+                            value: 'Popularity',
+                            child: Text('Popularity'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'Price: Low → High',
+                            child:
+                                Text('Price: Low → High'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'Price: High → Low',
+                            child:
+                                Text('Price: High → Low'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'Newest',
+                            child: Text('Newest'),
+                          ),
+                        ],
                         onChanged: (value) {
-                          if (value != null) {
-                            setModalState(() {
-                              tempSort = value;
-                            });
+                          if (value == null) {
+                            return;
                           }
+
+                          setSheetState(() {
+                            tempSortBy = value;
+                          });
                         },
                       ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _selectedGenre = tempGenre;
+                              _maxPrice = tempMaxPrice;
+                              _minRating = tempMinRating;
+                              _sortBy = tempSortBy;
+                            });
 
-                      const SizedBox(height: 28),
-
-                      ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            _selectedGenre = tempGenre;
-                            _minPrice = tempMinPrice;
-                            _maxPrice = tempMaxPrice;
-                            _minRating = tempRating;
-                            _sortBy = tempSort;
-                          });
-
-                          Navigator.pop(context);
-
-                          _applySearchAndFilters();
-                        },
-                        child: Text(
-                          _activeFilterCount == 0
-                              ? 'Apply Filters'
-                              : 'Apply Filters ($_activeFilterCount)',
+                            Navigator.pop(sheetContext);
+                          },
+                          child: const Text(
+                            'Apply Filters',
+                          ),
                         ),
                       ),
                     ],
@@ -433,56 +444,216 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _sectionTitle(String title) {
-    return Text(
-      title,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+  void _openBook(Book book) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BookDetailsScreen(
+          book: book,
+          similarBooks: MockBookService.books
+              .where(
+                (item) => item.id != book.id,
+              )
+              .take(3)
+              .toList(),
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final books = _filteredBooks;
+
     return Scaffold(
       backgroundColor: AppColors.cream,
       appBar: AppBar(
         backgroundColor: AppColors.cream,
         elevation: 0,
-        title: const Text('Search Books'),
+        title: Row(
+          children: [
+            Image.asset(
+              'assets/images/ShelfSpace.jpg',
+              height: 32,
+              width: 32,
+              errorBuilder: (_, __, ___) {
+                return const Icon(
+                  Icons.menu_book_rounded,
+                  size: 32,
+                  color: AppColors.burgundy,
+                );
+              },
+            ),
+            const SizedBox(width: 8),
+            const Text('Search'),
+          ],
+        ),
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildSearchBar(),
-            Expanded(
-              child: _hasSearched
-                  ? _buildSearchResults()
-                  : _buildSearchDiscovery(),
+        child: CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(
+                20,
+                8,
+                20,
+                0,
+              ),
+              sliver: SliverToBoxAdapter(
+                child: _buildSearchField(),
+              ),
             ),
+            if (!_hasSearch) ...[
+              SliverToBoxAdapter(
+                child: _buildQuickSearchSection(
+                  title: 'Recent Searches',
+                  items: _recentSearches,
+                  icon: Icons.history_rounded,
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: _buildQuickSearchSection(
+                  title: 'Popular Searches',
+                  items: _popularSearches,
+                  icon: Icons.trending_up_rounded,
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: _buildBrowseGenres(),
+              ),
+            ],
+            if (_hasSearch) ...[
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(
+                  20,
+                  20,
+                  20,
+                  12,
+                ),
+                sliver: SliverToBoxAdapter(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '${books.length} ${books.length == 1 ? 'book' : 'books'} found',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                      if (_activeFilterCount > 0)
+                        Container(
+                          padding:
+                              const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color:
+                                AppColors.burgundy,
+                            borderRadius:
+                                BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '$_activeFilterCount',
+                            style: const TextStyle(
+                              color: AppColors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      const SizedBox(width: 6),
+                      IconButton(
+                        onPressed: _showFilters,
+                        tooltip: 'Filters',
+                        icon: const Icon(
+                          Icons.tune_rounded,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (books.isEmpty)
+                const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: AppEmptyView(
+                    icon: Icons.search_off_rounded,
+                    title: 'No books found',
+                    message:
+                        'Try a different title, author, genre, or adjust your filters.',
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(
+                    20,
+                    0,
+                    20,
+                    30,
+                  ),
+                  sliver: SliverGrid(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final book = books[index];
+
+                        return BookCard(
+                          book: book,
+                          fillWidth: true,
+                          onTap: () {
+                            _openBook(book);
+                          },
+                        );
+                      },
+                      childCount: books.length,
+                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 14,
+                      mainAxisSpacing: 18,
+                      mainAxisExtent: 340,
+                    ),
+                  ),
+                ),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSearchBar() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+  Widget _buildSearchField() {
+    return Container(
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.dark.withValues(
+              alpha: 0.04,
+            ),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
       child: TextField(
         controller: _searchController,
-        focusNode: _searchFocusNode,
         textInputAction: TextInputAction.search,
+        onSubmitted: _performSearch,
         decoration: InputDecoration(
-          hintText: 'Search books, authors, genres...',
+          hintText: 'Search ShelfSpace books, authors, genres...',
           prefixIcon: const Icon(
             Icons.search_rounded,
-            color: AppColors.burgundy,
+            color: AppColors.mutedText,
           ),
-          suffixIcon: _searchController.text.isNotEmpty
+          suffixIcon: _hasSearch
               ? IconButton(
                   onPressed: _clearSearch,
-                  icon: const Icon(Icons.close_rounded),
+                  icon: const Icon(
+                    Icons.close_rounded,
+                  ),
                 )
               : null,
         ),
@@ -490,367 +661,161 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _buildSearchDiscovery() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 30),
+  Widget _buildQuickSearchSection({
+    required String title,
+    required List<String> items,
+    required IconData icon,
+  }) {
+    if (items.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        20,
+        26,
+        20,
+        0,
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
         children: [
           Text(
-            'Find your next great read',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            title,
+            style: const TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-
-          const SizedBox(height: 8),
-
-          Text(
-            'Search by title, author, or genre.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.mutedText,
-                ),
-          ),
-
-          const SizedBox(height: 28),
-
-          Text(
-            'Popular Searches',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-
-          const SizedBox(height: 14),
-
+          const SizedBox(height: 12),
           Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: _popularSearches.map((search) {
+            spacing: 8,
+            runSpacing: 8,
+            children: items.map((item) {
               return ActionChip(
-                label: Text(search),
-                avatar: const Icon(
-                  Icons.trending_up_rounded,
-                  size: 18,
+                onPressed: () {
+                  _useSearch(item);
+                },
+                avatar: Icon(
+                  icon,
+                  size: 16,
+                  color: AppColors.burgundy,
                 ),
-                onPressed: () => _searchPopular(search),
+                label: Text(item),
                 backgroundColor: AppColors.white,
                 side: const BorderSide(
                   color: AppColors.border,
                 ),
+                labelStyle: const TextStyle(
+                  fontSize: 12,
+                ),
               );
             }).toList(),
-          ),
-
-          const SizedBox(height: 32),
-
-          Text(
-            'Browse by Genre',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-
-          const SizedBox(height: 14),
-
-          _buildGenreTile(
-            Icons.menu_book_rounded,
-            'Fiction',
-          ),
-          _buildGenreTile(
-            Icons.favorite_border_rounded,
-            'Romance',
-          ),
-          _buildGenreTile(
-            Icons.search_rounded,
-            'Mystery',
-          ),
-          _buildGenreTile(
-            Icons.business_center_outlined,
-            'Business',
-          ),
-          _buildGenreTile(
-            Icons.psychology_outlined,
-            'Self Development',
           ),
         ],
       ),
     );
   }
 
-  Widget _buildGenreTile(
-    IconData icon,
-    String title,
-  ) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 10),
-      child: ListTile(
-        onTap: () => _searchPopular(title),
-        leading: Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            color: AppColors.burgundy.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            icon,
-            color: AppColors.burgundy,
-          ),
-        ),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        trailing: const Icon(
-          Icons.chevron_right_rounded,
-          color: AppColors.mutedText,
-        ),
+  Widget _buildBrowseGenres() {
+    const genres = [
+      ('Fiction', Icons.auto_stories_outlined),
+      ('Romance', Icons.favorite_border_rounded),
+      ('Mystery', Icons.search_rounded),
+      ('Business', Icons.business_center_outlined),
+      ('Classic', Icons.menu_book_outlined),
+      ('Lifestyle', Icons.self_improvement_outlined),
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        20,
+        28,
+        20,
+        30,
       ),
-    );
-  }
-
-  Widget _buildSearchResults() {
-    if (_searchResults.isEmpty) {
-      return _buildEmptyState();
-    }
-
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
-      children: [
-        Row(
-          children: [
-            Text(
-              '${_searchResults.length} result'
-              '${_searchResults.length == 1 ? '' : 's'}',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+      child: Column(
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Browse by Genre',
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.bold,
             ),
-
-            const Spacer(),
-
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                TextButton.icon(
-                  onPressed: _showFilters,
-                  icon: const Icon(Icons.tune_rounded),
-                  label: const Text('Filter'),
-                ),
-
-                if (_activeFilterCount > 0)
-                  Positioned(
-                    right: 0,
-                    top: 2,
-                    child: Container(
-                      padding: const EdgeInsets.all(5),
-                      decoration: const BoxDecoration(
-                        color: AppColors.burgundy,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        '$_activeFilterCount',
-                        style: const TextStyle(
-                          color: AppColors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 8),
-
-        ..._searchResults.map(
-          (book) => _buildSearchResultCard(book),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSearchResultCard(Book book) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 14),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => _openBookDetails(book),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  book.coverUrl,
-                  width: 78,
-                  height: 108,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) {
-                    return Container(
-                      width: 78,
-                      height: 108,
-                      color: AppColors.border,
-                      child: const Icon(
-                        Icons.menu_book_rounded,
-                        color: AppColors.mutedText,
-                      ),
-                    );
-                  },
-                ),
+          ),
+          const SizedBox(height: 12),
+          ...genres.map(
+            (genre) => Padding(
+              padding: const EdgeInsets.only(
+                bottom: 10,
               ),
-
-              const SizedBox(width: 14),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      book.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
+              child: Material(
+                color: AppColors.white,
+                borderRadius:
+                    BorderRadius.circular(14),
+                child: InkWell(
+                  onTap: () {
+                    _useSearch(genre.$1);
+                  },
+                  borderRadius:
+                      BorderRadius.circular(14),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.all(13),
+                    decoration: BoxDecoration(
+                      borderRadius:
+                          BorderRadius.circular(14),
+                      border: Border.all(
+                        color: AppColors.border,
                       ),
                     ),
-
-                    const SizedBox(height: 5),
-
-                    Text(
-                      book.author,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.mutedText,
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.burgundy.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        book.genre,
-                        style: const TextStyle(
-                          color: AppColors.burgundy,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    Row(
+                    child: Row(
                       children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: AppColors.burgundy
+                                .withValues(
+                              alpha: 0.08,
+                            ),
+                            borderRadius:
+                                BorderRadius.circular(
+                              11,
+                            ),
+                          ),
+                          child: Icon(
+                            genre.$2,
+                            color: AppColors.burgundy,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            genre.$1,
+                            style: const TextStyle(
+                              fontWeight:
+                                  FontWeight.w600,
+                            ),
+                          ),
+                        ),
                         const Icon(
-                          Icons.star_rounded,
-                          color: Colors.amber,
-                          size: 18,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${book.rating}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(width: 5),
-                        Text(
-                          '(${book.reviewCount})',
-                          style: const TextStyle(
-                            color: AppColors.mutedText,
-                            fontSize: 12,
-                          ),
+                          Icons.chevron_right_rounded,
+                          color:
+                              AppColors.mutedText,
                         ),
                       ],
                     ),
-
-                    const SizedBox(height: 8),
-
-                    Text(
-                      '₦${book.price.toStringAsFixed(0)}',
-                      style: const TextStyle(
-                        color: AppColors.burgundy,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.mutedText,
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 90,
-              height: 90,
-              decoration: BoxDecoration(
-                color: AppColors.burgundy.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.search_off_rounded,
-                size: 42,
-                color: AppColors.burgundy,
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            Text(
-              'No books found',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-
-            const SizedBox(height: 8),
-
-            Text(
-              'Try changing your search or filters.',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.mutedText,
-                  ),
-            ),
-
-            const SizedBox(height: 20),
-
-            OutlinedButton(
-              onPressed: _clearSearch,
-              child: const Text('Try Another Search'),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }

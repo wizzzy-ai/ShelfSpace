@@ -4,17 +4,17 @@ import 'core/theme/app_theme.dart';
 import 'screens/splash/splash_screen.dart';
 
 void main() {
-  runApp(const BibliraApp());
+  runApp(const ShelfSpaceApp());
 }
 
-class BibliraApp extends StatelessWidget {
-  const BibliraApp({super.key});
+class ShelfSpaceApp extends StatelessWidget {
+  const ShelfSpaceApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Biblira',
+      title: 'ShelfSpace',
       theme: AppTheme.lightTheme,
       home: const SplashScreen(),
     );

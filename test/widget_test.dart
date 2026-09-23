@@ -2,12 +2,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:biblira/main.dart';
 
 void main() {
-  testWidgets('Biblira smoke test', (WidgetTester tester) async {
-    // Build BibliraApp and trigger initial frame.
+  testWidgets('ShelfSpace smoke test', (WidgetTester tester) async {
+    // Build the app and trigger the initial frame.
     await tester.pumpWidget(const BibliraApp());
 
     // Verify initial splash screen branding
-    expect(find.text('BIBLIRA'), findsOneWidget);
+    expect(find.text('SHELFSPACE'), findsOneWidget);
     expect(find.text('Your World of Books'), findsOneWidget);
 
     // Fast forward past splash timer (2800ms)

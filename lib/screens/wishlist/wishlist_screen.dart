@@ -15,7 +15,24 @@ class WishlistScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: AppColors.cream,
         elevation: 0,
-        title: const Text('My Wishlist'),
+        title: Row(
+          children: [
+            Image.asset(
+              'assets/images/ShelfSpace.jpg',
+              height: 32,
+              width: 32,
+              errorBuilder: (_, __, ___) {
+                return const Icon(
+                  Icons.menu_book_rounded,
+                  size: 32,
+                  color: AppColors.burgundy,
+                );
+              },
+            ),
+            const SizedBox(width: 8),
+            const Text('My Wishlist'),
+          ],
+        ),
         actions: [
           AnimatedBuilder(
             animation: WishlistService.instance,

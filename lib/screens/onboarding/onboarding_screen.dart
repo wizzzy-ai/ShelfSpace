@@ -33,7 +33,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       icon: Icons.local_shipping_rounded,
       title: 'Books Delivered\nto You',
       description:
-          'Order your favorite books from Biblira and have them delivered right to your doorstep.',
+          'Order your favorite books from ShelfSpace and have them delivered right to your doorstep.',
     ),
   ];
 

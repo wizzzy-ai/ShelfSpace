@@ -3,42 +3,60 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../models/book.dart';
 import '../../services/cart_service.dart';
+import '../../services/mock_book_service.dart';
 import '../../services/wishlist_service.dart';
 import '../../widgets/book_card.dart';
+import '../cart/cart_screen.dart';
+import 'reviews_screen.dart';
 
 class BookDetailsScreen extends StatelessWidget {
   final Book book;
-  final List<Book> similarBooks;
+  final List<Book>? similarBooks;
 
   const BookDetailsScreen({
     super.key,
     required this.book,
-    this.similarBooks = const [],
+    this.similarBooks,
   });
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: WishlistService.instance,
-      builder: (context, _) {
-        final isWishlisted = WishlistService.instance.contains(book);
-
-        return Scaffold(
-          backgroundColor: AppColors.cream,
-          appBar: AppBar(
-            backgroundColor: AppColors.cream,
-            elevation: 0,
-            leading: IconButton(
-              onPressed: () {
-                Navigator.pop(context);
+    return Scaffold(
+      backgroundColor: AppColors.cream,
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Image.asset(
+              'assets/images/ShelfSpace.jpg',
+              height: 32,
+              width: 32,
+              errorBuilder: (_, __, ___) {
+                return const Icon(
+                  Icons.menu_book_rounded,
+                  size: 32,
+                  color: AppColors.burgundy,
+                );
               },
-              icon: const Icon(
-                Icons.arrow_back_rounded,
-                color: AppColors.dark,
-              ),
             ),
-            actions: [
-              IconButton(
+            const SizedBox(width: 8),
+            const Text('Book Details'),
+          ],
+        ),
+        backgroundColor: AppColors.cream,
+        foregroundColor: AppColors.dark,
+        elevation: 0,
+        centerTitle: true,
+        actions: [
+          AnimatedBuilder(
+            animation: WishlistService.instance,
+            builder: (context, _) {
+              final isWishlisted =
+                  WishlistService.instance.contains(book);
+
+              return IconButton(
+                tooltip: isWishlisted
+                    ? 'Remove from wishlist'
+                    : 'Add to wishlist',
                 onPressed: () {
                   WishlistService.instance.toggle(book);
 
@@ -49,8 +67,8 @@ class BookDetailsScreen extends StatelessWidget {
                         duration: const Duration(milliseconds: 900),
                         content: Text(
                           isWishlisted
-                              ? '${book.title} removed from wishlist'
-                              : '${book.title} added to wishlist',
+                              ? 'Removed from wishlist'
+                              : 'Added to wishlist',
                         ),
                       ),
                     );
@@ -63,341 +81,503 @@ class BookDetailsScreen extends StatelessWidget {
                       ? AppColors.burgundy
                       : AppColors.dark,
                 ),
-              ),
-              const SizedBox(width: 8),
-            ],
+              );
+            },
           ),
-          body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 30),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(18),
-                      child: Image.network(
-                        book.coverUrl,
-                        width: 220,
-                        height: 300,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) {
-                          return Container(
-                            width: 220,
-                            height: 300,
-                            color: AppColors.border,
-                            child: const Icon(
-                              Icons.menu_book_rounded,
-                              size: 60,
-                              color: AppColors.mutedText,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
+        ],
+      ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+
+          final bool isDesktop = width >= 1000;
+          final bool isTablet = width >= 700 && width < 1000;
+
+          final double maxContentWidth = isDesktop
+              ? 1120
+              : isTablet
+                  ? 900
+                  : double.infinity;
+
+          return SafeArea(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: maxContentWidth,
+                ),
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(
+                    isDesktop ? 32 : 20,
+                    20,
+                    isDesktop ? 32 : 20,
+                    40,
                   ),
-                  const SizedBox(height: 24),
-                  Text(
-                    book.title,
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'by ${book.author}',
-                    style: const TextStyle(
-                      color: AppColors.mutedText,
-                      fontSize: 15,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
-                        Icons.star_rounded,
-                        color: Colors.amber,
-                        size: 20,
+                      _buildHeroSection(
+                        context,
+                        isDesktop: isDesktop,
+                        isTablet: isTablet,
                       ),
-                      const SizedBox(width: 5),
-                      Text(
-                        '${book.rating}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        '(${book.reviewCount} reviews)',
-                        style: const TextStyle(
-                          color: AppColors.mutedText,
-                        ),
-                      ),
+                      const SizedBox(height: 32),
+                      _buildAboutSection(context),
+                      const SizedBox(height: 28),
+                      _buildBookInformation(context),
+                      const SizedBox(height: 28),
+                      _buildReviewsPreview(context),
+                      const SizedBox(height: 32),
+                      _buildSimilarBooks(context),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '₦${book.price.toStringAsFixed(0)}',
-                    style: const TextStyle(
-                      color: AppColors.burgundy,
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.success.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      'In Stock',
-                      style: TextStyle(
-                        color: AppColors.success,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  Text(
-                    'About this book',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    book.description,
-                    style: const TextStyle(
-                      color: AppColors.mutedText,
-                      height: 1.6,
-                      fontSize: 15,
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  Text(
-                    'Book Information',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: 12),
-                  _InfoRow(
-                    label: 'Genre',
-                    value: book.genre,
-                  ),
-                  _InfoRow(
-                    label: 'Author',
-                    value: book.author,
-                  ),
-                  _InfoRow(
-                    label: 'Rating',
-                    value: '${book.rating}/5',
-                  ),
-                  const SizedBox(height: 28),
-                  Text(
-                    'Customer Reviews',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: 14),
-                  const _ReviewCard(
-                    name: 'James',
-                    rating: 5,
-                    review:
-                        'A really enjoyable read. The story kept me interested from beginning to end.',
-                  ),
-                  const SizedBox(height: 12),
-                  const _ReviewCard(
-                    name: 'Sarah',
-                    rating: 4,
-                    review:
-                        'Well written and worth reading. I would definitely recommend it.',
-                  ),
-                  if (similarBooks.isNotEmpty) ...[
-                    const SizedBox(height: 30),
-                    Text(
-                      'You May Also Like',
-                      style:
-                          Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                    ),
-                    const SizedBox(height: 14),
-                    SizedBox(
-                      height: 285,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: similarBooks.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(width: 14),
-                        itemBuilder: (context, index) {
-                          final similarBook = similarBooks[index];
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
 
-                          return BookCard(
-                            book: similarBook,
-                            onTap: () {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => BookDetailsScreen(
-                                    book: similarBook,
-                                    similarBooks: similarBooks
-                                        .where(
-                                          (item) =>
-                                              item.id != similarBook.id,
-                                        )
-                                        .take(3)
-                                        .toList(),
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 30),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            WishlistService.instance.toggle(book);
-
-                            ScaffoldMessenger.of(context)
-                              ..hideCurrentSnackBar()
-                              ..showSnackBar(
-                                SnackBar(
-                                  duration:
-                                      const Duration(milliseconds: 900),
-                                  content: Text(
-                                    isWishlisted
-                                        ? 'Removed from wishlist'
-                                        : 'Added to wishlist',
-                                  ),
-                                ),
-                              );
-                          },
-                          icon: Icon(
-                            isWishlisted
-                                ? Icons.favorite_rounded
-                                : Icons.favorite_border_rounded,
-                          ),
-                          label: Text(
-                            isWishlisted ? 'Saved' : 'Wishlist',
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.burgundy,
-                            side: const BorderSide(
-                              color: AppColors.burgundy,
-                            ),
-                            minimumSize: const Size(0, 52),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            CartService.instance.add(book);
-
-                            ScaffoldMessenger.of(context)
-                              ..hideCurrentSnackBar()
-                              ..showSnackBar(
-                                SnackBar(
-                                  duration: const Duration(milliseconds: 1000),
-                                  content: Text(
-                                    '${book.title} added to cart',
-                                  ),
-                                ),
-                              );
-                          },
-                          icon: const Icon(
-                            Icons.shopping_cart_outlined,
-                          ),
-                          label: const Text('Add to Cart'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+  Widget _buildHeroSection(
+    BuildContext context, {
+    required bool isDesktop,
+    required bool isTablet,
+  }) {
+    if (isDesktop || isTablet) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 4,
+            child: Center(
+              child: _buildCover(
+                context,
+                width: isDesktop ? 300 : 260,
+                height: isDesktop ? 410 : 355,
               ),
             ),
           ),
+          const SizedBox(width: 36),
+          Expanded(
+            flex: 6,
+            child: _buildBookInfo(context),
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Center(
+          child: _buildCover(
+            context,
+            width: 215,
+            height: 300,
+          ),
+        ),
+        const SizedBox(height: 24),
+        _buildBookInfo(context),
+      ],
+    );
+  }
+
+  Widget _buildCover(
+    BuildContext context, {
+    required double width,
+    required double height,
+  }) {
+    return Stack(
+      children: [
+        Container(
+          width: width,
+          height: height,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.dark.withValues(alpha: 0.16),
+                blurRadius: 24,
+                offset: const Offset(0, 12),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: Image.network(
+              book.coverUrl,
+              width: width,
+              height: height,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) {
+                return Container(
+                  color: AppColors.border,
+                  child: const Icon(
+                    Icons.menu_book_rounded,
+                    size: 70,
+                    color: AppColors.mutedText,
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        if (book.isBestseller)
+          Positioned(
+            top: 12,
+            left: 12,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 6,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.burgundy,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'Bestseller',
+                style: TextStyle(
+                  color: AppColors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildBookInfo(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          book.genre.toUpperCase(),
+          style: const TextStyle(
+            color: AppColors.burgundy,
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          book.title,
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                color: AppColors.dark,
+                fontWeight: FontWeight.bold,
+                height: 1.1,
+              ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'by ${book.author}',
+          style: const TextStyle(
+            color: AppColors.mutedText,
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            const Icon(
+              Icons.star_rounded,
+              color: Colors.amber,
+              size: 22,
+            ),
+            const SizedBox(width: 5),
+            Text(
+              book.rating.toString(),
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: AppColors.dark,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '${book.reviewCount} reviews',
+              style: const TextStyle(
+                color: AppColors.mutedText,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        Text(
+          '₦${book.price.toStringAsFixed(0)}',
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: AppColors.burgundy,
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        const SizedBox(height: 8),
+        const Row(
+          children: [
+            Icon(
+              Icons.check_circle_rounded,
+              color: AppColors.success,
+              size: 18,
+            ),
+            SizedBox(width: 6),
+            Text(
+              'In stock',
+              style: TextStyle(
+                color: AppColors.success,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 22),
+        _buildActionButtons(context),
+      ],
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 360;
+
+        if (compact) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildAddToCartButton(context),
+              const SizedBox(height: 10),
+              _buildBuyNowButton(context),
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(
+              child: _buildAddToCartButton(context),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildBuyNowButton(context),
+            ),
+          ],
         );
       },
     );
   }
-}
 
-class _InfoRow extends StatelessWidget {
-  final String label;
-  final String value;
+  Widget _buildAddToCartButton(BuildContext context) {
+    return SizedBox(
+      height: 50,
+      child: OutlinedButton.icon(
+        onPressed: () {
+          CartService.instance.add(book);
 
-  const _InfoRow({
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 90,
-            child: Text(
-              label,
-              style: const TextStyle(
-                color: AppColors.mutedText,
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                duration: const Duration(milliseconds: 1000),
+                content: Text('${book.title} added to cart'),
               ),
-            ),
+            );
+        },
+        icon: const Icon(
+          Icons.shopping_cart_outlined,
+          size: 20,
+        ),
+        label: const Text(
+          'Add to Cart',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.burgundy,
+          side: const BorderSide(
+            color: AppColors.burgundy,
           ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-              ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBuyNowButton(BuildContext context) {
+    return SizedBox(
+      height: 50,
+      child: ElevatedButton.icon(
+        onPressed: () {
+          CartService.instance.add(book);
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const CartScreen(),
             ),
+          );
+        },
+        icon: const Icon(
+          Icons.flash_on_rounded,
+          size: 19,
+        ),
+        label: const Text(
+          'Buy Now',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.burgundy,
+          foregroundColor: AppColors.white,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAboutSection(BuildContext context) {
+    return _buildSectionCard(
+      title: 'About this book',
+      child: Text(
+        book.description,
+        style: const TextStyle(
+          color: AppColors.mutedText,
+          fontSize: 14,
+          height: 1.7,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBookInformation(BuildContext context) {
+    return _buildSectionCard(
+      title: 'Book Information',
+      child: Column(
+        children: [
+          _infoRow('Title', book.title),
+          _infoDivider(),
+          _infoRow('Author', book.author),
+          _infoDivider(),
+          _infoRow('Genre', book.genre),
+          _infoDivider(),
+          _infoRow(
+            'Rating',
+            '${book.rating} / 5',
+          ),
+          _infoDivider(),
+          _infoRow(
+            'Reviews',
+            '${book.reviewCount}',
           ),
         ],
       ),
     );
   }
-}
 
-class _ReviewCard extends StatelessWidget {
-  final String name;
-  final int rating;
-  final String review;
+  Widget _buildReviewsPreview(BuildContext context) {
+    return _buildSectionCard(
+      title: 'Customer Reviews',
+      action: TextButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ReviewsScreen(book: book),
+            ),
+          );
+        },
+        child: const Text(
+          'See all',
+          style: TextStyle(
+            color: AppColors.burgundy,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                book.rating.toString(),
+                style: const TextStyle(
+                  fontSize: 34,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.dark,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: List.generate(
+                      5,
+                      (index) => Icon(
+                        Icons.star_rounded,
+                        color: index < book.rating.round()
+                            ? Colors.amber
+                            : AppColors.border,
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${book.reviewCount} customer reviews',
+                    style: const TextStyle(
+                      color: AppColors.mutedText,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          _reviewPreview(
+            name: 'Daniel',
+            date: '2 days ago',
+            text:
+                'Really enjoyed this book. The writing is excellent and the story kept me interested.',
+            rating: 5,
+          ),
+          const SizedBox(height: 14),
+          _reviewPreview(
+            name: 'Hannah',
+            date: '1 week ago',
+            text:
+                'A great read from beginning to end. Definitely worth adding to your collection.',
+            rating: 4,
+          ),
+        ],
+      ),
+    );
+  }
 
-  const _ReviewCard({
-    required this.name,
-    required this.rating,
-    required this.review,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _reviewPreview({
+    required String name,
+    required String date,
+    required String text,
+    required int rating,
+  }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(14),
+        color: AppColors.cream,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: AppColors.border,
         ),
@@ -407,32 +587,50 @@ class _ReviewCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundColor:
-                    AppColors.burgundy.withValues(alpha: 0.10),
+              Container(
+                width: 34,
+                height: 34,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.burgundy,
+                ),
+                alignment: Alignment.center,
                 child: Text(
-                  name[0],
+                  name.substring(0, 1).toUpperCase(),
                   style: const TextStyle(
-                    color: AppColors.burgundy,
+                    color: AppColors.white,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
-              Text(
-                name,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
+              const SizedBox(width: 9),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                    Text(
+                      date,
+                      style: const TextStyle(
+                        color: AppColors.mutedText,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const Spacer(),
               Row(
                 children: List.generate(
                   5,
                   (index) => Icon(
                     Icons.star_rounded,
-                    size: 16,
+                    size: 14,
                     color: index < rating
                         ? Colors.amber
                         : AppColors.border,
@@ -443,13 +641,151 @@ class _ReviewCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            review,
+            text,
             style: const TextStyle(
               color: AppColors.mutedText,
+              fontSize: 13,
               height: 1.5,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSimilarBooks(BuildContext context) {
+    final books = (similarBooks ??
+            MockBookService.books)
+        .where((item) => item.id != book.id)
+        .take(5)
+        .toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 0),
+          child: Text(
+            'You May Also Like',
+            style: TextStyle(
+              color: AppColors.dark,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 300,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: books.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 14),
+            itemBuilder: (context, index) {
+              final similarBook = books[index];
+
+              return BookCard(
+                book: similarBook,
+                onTap: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => BookDetailsScreen(
+                        book: similarBook,
+                        similarBooks: books,
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSectionCard({
+    required String title,
+    required Widget child,
+    Widget? action,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: AppColors.border,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.dark.withValues(alpha: 0.035),
+            blurRadius: 14,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    color: AppColors.dark,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              if (action != null) action,
+            ],
+          ),
+          const SizedBox(height: 14),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _infoRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 90,
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.mutedText,
+              fontSize: 13,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              color: AppColors.dark,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _infoDivider() {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 12),
+      child: Divider(
+        height: 1,
+        color: AppColors.border,
       ),
     );
   }

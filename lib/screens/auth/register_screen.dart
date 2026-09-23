@@ -76,7 +76,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 8),
 
               Text(
-                'Join Biblira and start discovering books you will love.',
+                'Join ShelfSpace and start discovering books you will love.',
                 style: GoogleFonts.inter(
                   color: AppColors.mutedText,
                   fontSize: 15,

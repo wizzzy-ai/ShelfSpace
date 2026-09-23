@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import '../core/constants/app_colors.dart';
 import '../models/book.dart';
-import 'book_cover_image.dart';
-import 'price_text.dart';
-import 'rating_widget.dart';
 
-class FeaturedBookCard extends StatelessWidget {
+class FeaturedBookBanner extends StatelessWidget {
   final Book book;
   final VoidCallback? onTap;
 
-  const FeaturedBookCard({
+  const FeaturedBookBanner({
     super.key,
     required this.book,
     this.onTap,
@@ -18,117 +15,234 @@ class FeaturedBookCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 20),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.border),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // Book cover
-            BookCoverImage(
-              imageUrl: book.coverUrl,
-              width: 100,
-              height: 150,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            const SizedBox(width: 16),
-            // Book details
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.burgundy.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      'Featured',
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.5,
-                        color: AppColors.burgundy,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final isSmall = width < 430;
+
+          final imageWidth = isSmall ? 92.0 : 112.0;
+          final imageHeight = isSmall ? 130.0 : 158.0;
+
+          return Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(22),
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(22),
+              child: Container(
+                height: isSmall ? 185 : 205,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: AppColors.burgundy,
+                  borderRadius: BorderRadius.circular(22),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.burgundy.withValues(
+                        alpha: 0.16,
                       ),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    book.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.playfairDisplay(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.dark,
-                      height: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    book.author,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      color: AppColors.mutedText,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  RatingWidget(
-                    rating: book.rating,
-                    reviewCount: book.reviewCount,
-                    starSize: 14,
-                  ),
-                  const SizedBox(height: 12),
-                  PriceText(
-                    price: book.price,
-                    fontSize: 18,
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 44,
-                    child: ElevatedButton(
-                      onPressed: onTap,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.burgundy,
-                        foregroundColor: AppColors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(22),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        right: -35,
+                        top: -35,
+                        child: Container(
+                          width: 150,
+                          height: 150,
+                          decoration: BoxDecoration(
+                            color: AppColors.white.withValues(
+                              alpha: 0.06,
+                            ),
+                            shape: BoxShape.circle,
+                          ),
                         ),
                       ),
-                      child: Text(
-                        'View Book',
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                      Positioned(
+                        right: -15,
+                        bottom: -55,
+                        child: Container(
+                          width: 180,
+                          height: 180,
+                          decoration: BoxDecoration(
+                            color: AppColors.white.withValues(
+                              alpha: 0.04,
+                            ),
+                            shape: BoxShape.circle,
+                          ),
                         ),
                       ),
-                    ),
+                      Padding(
+                        padding: EdgeInsets.all(
+                          isSmall ? 14 : 18,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.center,
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    padding:
+                                        const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.white.withValues(
+                                        alpha: 0.12,
+                                      ),
+                                      borderRadius:
+                                          BorderRadius.circular(7),
+                                    ),
+                                    child: const Text(
+                                      'FEATURED BOOK',
+                                      maxLines: 1,
+                                      overflow:
+                                          TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color: AppColors.white,
+                                        fontSize: 8,
+                                        fontWeight:
+                                            FontWeight.bold,
+                                        letterSpacing: 0.8,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 9),
+                                  Text(
+                                    book.title,
+                                    maxLines: 2,
+                                    overflow:
+                                        TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: AppColors.white,
+                                      fontSize:
+                                          isSmall ? 17 : 21,
+                                      fontWeight:
+                                          FontWeight.bold,
+                                      height: 1.15,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'by ${book.author}',
+                                    maxLines: 1,
+                                    overflow:
+                                        TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: AppColors.white,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.star_rounded,
+                                        color: Colors.amber,
+                                        size: 15,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '${book.rating}',
+                                        style: const TextStyle(
+                                          color:
+                                              AppColors.white,
+                                          fontSize: 11,
+                                          fontWeight:
+                                              FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Flexible(
+                                        child: Text(
+                                          '₦${book.price.toStringAsFixed(0)}',
+                                          maxLines: 1,
+                                          overflow: TextOverflow
+                                              .ellipsis,
+                                          style:
+                                              const TextStyle(
+                                            color:
+                                                AppColors.white,
+                                            fontSize: 12,
+                                            fontWeight:
+                                                FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 9),
+                                  Container(
+                                    padding:
+                                        const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.white,
+                                      borderRadius:
+                                          BorderRadius.circular(9),
+                                    ),
+                                    child: const Text(
+                                      'Explore Book',
+                                      style: TextStyle(
+                                        color:
+                                            AppColors.burgundy,
+                                        fontSize: 10,
+                                        fontWeight:
+                                            FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            ClipRRect(
+                              borderRadius:
+                                  BorderRadius.circular(12),
+                              child: Image.network(
+                                book.coverUrl,
+                                width: imageWidth,
+                                height: imageHeight,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) {
+                                  return Container(
+                                    width: imageWidth,
+                                    height: imageHeight,
+                                    color: AppColors.border,
+                                    child: const Icon(
+                                      Icons.menu_book_rounded,
+                                      color:
+                                          AppColors.mutedText,
+                                      size: 32,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

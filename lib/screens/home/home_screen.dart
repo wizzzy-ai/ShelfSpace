@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../services/mock_book_service.dart';
 import '../../widgets/book_card.dart';
 import '../../widgets/category_card.dart';
+import '../../widgets/featured_book_card.dart';
+import '../../widgets/notification_bell.dart';
+
 import '../../widgets/section_header.dart';
 import '../books/book_details_screen.dart';
 
@@ -26,6 +28,29 @@ class HomeScreen extends StatelessWidget {
     final newArrivals =
         books.where((book) => book.isNewArrival).toList();
 
+    const categories = [
+      {
+        'title': 'Fiction',
+        'icon': Icons.auto_stories_outlined,
+      },
+      {
+        'title': 'Romance',
+        'icon': Icons.favorite_border_rounded,
+      },
+      {
+        'title': 'Mystery',
+        'icon': Icons.search_rounded,
+      },
+      {
+        'title': 'Business',
+        'icon': Icons.business_center_outlined,
+      },
+      {
+        'title': 'Science',
+        'icon': Icons.science_outlined,
+      },
+    ];
+
     return Scaffold(
       backgroundColor: AppColors.cream,
       body: SafeArea(
@@ -35,67 +60,49 @@ class HomeScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               sliver: SliverToBoxAdapter(
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    Image.asset(
+                      'assets/images/ShelfSpace.jpg',
+                      height: 40,
+                      width: 40,
+                      errorBuilder: (_, __, ___) {
+                        return const Icon(
+                          Icons.menu_book_rounded,
+                          size: 40,
+                          color: AppColors.burgundy,
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             'Good morning 👋',
-                            style: GoogleFonts.inter(
-                              color: AppColors.mutedText,
-                              fontSize: 13,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                  color: AppColors.mutedText,
+                                  fontWeight: FontWeight.w500,
+                                ),
                           ),
-                          const SizedBox(height: 5),
+                          const SizedBox(height: 4),
                           Text(
-                            'Find your next\ngreat read.',
-                            style: GoogleFonts.playfairDisplay(
-                              color: AppColors.dark,
-                              fontSize: 28,
-                              height: 1.1,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            'Find your next great read with ShelfSpace.',
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineSmall
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                           ),
                         ],
                       ),
                     ),
-
-                    Container(
-                      width: 46,
-                      height: 46,
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-                        borderRadius: BorderRadius.circular(15),
-                        border: Border.all(
-                          color: AppColors.border,
-                        ),
-                      ),
-                      child: Stack(
-                        children: [
-                          const Center(
-                            child: Icon(
-                              Icons.notifications_none_rounded,
-                              color: AppColors.dark,
-                              size: 23,
-                            ),
-                          ),
-                          Positioned(
-                            top: 9,
-                            right: 10,
-                            child: Container(
-                              width: 7,
-                              height: 7,
-                              decoration: const BoxDecoration(
-                                color: AppColors.burgundy,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    const NotificationBell(),
                   ],
                 ),
               ),
@@ -108,7 +115,7 @@ class HomeScreen extends StatelessWidget {
                 child: TextField(
                   readOnly: true,
                   decoration: InputDecoration(
-                    hintText: 'Search books, authors, genres...',
+                    hintText: 'Search ShelfSpace books, authors, genres...',
                     prefixIcon: const Icon(
                       Icons.search_rounded,
                     ),
@@ -130,121 +137,23 @@ class HomeScreen extends StatelessWidget {
             ),
 
             // Featured
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
-              sliver: SliverToBoxAdapter(
-                child: Container(
-                  height: 195,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: AppColors.burgundy,
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
-                          mainAxisAlignment:
-                              MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'FEATURED BOOK',
-                              style: GoogleFonts.inter(
-                                color: AppColors.cream
-                                    .withValues(alpha: 0.7),
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 1.4,
-                              ),
-                            ),
-                            const SizedBox(height: 9),
-                            Text(
-                              featured.title,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.playfairDisplay(
-                                color: AppColors.cream,
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                                height: 1.1,
-                              ),
-                            ),
-                            const SizedBox(height: 5),
-                            Text(
-                              featured.author,
-                              style: GoogleFonts.inter(
-                                color: AppColors.cream
-                                    .withValues(alpha: 0.8),
-                                fontSize: 12,
-                              ),
-                            ),
-                            const Spacer(),
-                            GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => BookDetailsScreen(
-                                      book: featured,
-                                      similarBooks: books
-                                          .where((book) => book.id != featured.id)
-                                          .take(3)
-                                          .toList(),
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: Container(
-                                padding:
-                                    const EdgeInsets.symmetric(
-                                  horizontal: 13,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.cream,
-                                  borderRadius:
-                                      BorderRadius.circular(9),
-                                ),
-                                child: Text(
-                                  'View book',
-                                  style: GoogleFonts.inter(
-                                    color: AppColors.burgundy,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+            SliverToBoxAdapter(
+              child: FeaturedBookBanner(
+                book: featured,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => BookDetailsScreen(
+                        book: featured,
+                        similarBooks: books
+                            .where((book) => book.id != featured.id)
+                            .take(3)
+                            .toList(),
                       ),
-
-                      const SizedBox(width: 14),
-
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(13),
-                        child: Image.network(
-                          featured.coverUrl,
-                          width: 105,
-                          height: 150,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) {
-                            return Container(
-                              width: 105,
-                              height: 150,
-                              color: AppColors.border,
-                              child: const Icon(
-                                Icons.book_rounded,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                    ),
+                  );
+                },
               ),
             ),
 
@@ -264,34 +173,32 @@ class HomeScreen extends StatelessWidget {
               sliver: SliverToBoxAdapter(
                 child: SizedBox(
                   height: 105,
-                  child: ListView(
+                  child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                    ),
                     scrollDirection: Axis.horizontal,
-                    children: const [
-                      CategoryCard(
-                        title: 'Fiction',
-                        icon: Icons.auto_stories_rounded,
-                      ),
-                      SizedBox(width: 10),
-                      CategoryCard(
-                        title: 'Romance',
-                        icon: Icons.favorite_border_rounded,
-                      ),
-                      SizedBox(width: 10),
-                      CategoryCard(
-                        title: 'Mystery',
-                        icon: Icons.search_rounded,
-                      ),
-                      SizedBox(width: 10),
-                      CategoryCard(
-                        title: 'Business',
-                        icon: Icons.business_center_outlined,
-                      ),
-                      SizedBox(width: 10),
-                      CategoryCard(
-                        title: 'Science',
-                        icon: Icons.science_outlined,
-                      ),
-                    ],
+                    itemCount: categories.length,
+                    separatorBuilder: (_, __) {
+                      return const SizedBox(width: 10);
+                    },
+                    itemBuilder: (context, index) {
+                      final category = categories[index];
+
+                      return CategoryCard(
+                        title: category['title'] as String,
+                        icon: category['icon'] as IconData,
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                '${category['title']} books selected.',
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
                   ),
                 ),
               ),
@@ -312,23 +219,31 @@ class HomeScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 8, 0, 0),
               sliver: SliverToBoxAdapter(
                 child: SizedBox(
-                  height: 285,
+                  height: 295,
                   child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                    ),
                     scrollDirection: Axis.horizontal,
                     itemCount: bestsellers.length,
-                    separatorBuilder: (_, __) =>
-                        const SizedBox(width: 16),
+                    separatorBuilder: (_, __) {
+                      return const SizedBox(width: 14);
+                    },
                     itemBuilder: (context, index) {
+                      final book = bestsellers[index];
+
                       return BookCard(
-                        book: bestsellers[index],
+                        book: book,
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (_) => BookDetailsScreen(
-                                book: bestsellers[index],
+                                book: book,
                                 similarBooks: books
-                                    .where((book) => book.id != bestsellers[index].id)
+                                    .where(
+                                      (item) => item.id != book.id,
+                                    )
                                     .take(3)
                                     .toList(),
                               ),
@@ -357,23 +272,31 @@ class HomeScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 8, 0, 30),
               sliver: SliverToBoxAdapter(
                 child: SizedBox(
-                  height: 285,
+                  height: 295,
                   child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                    ),
                     scrollDirection: Axis.horizontal,
                     itemCount: newArrivals.length,
-                    separatorBuilder: (_, __) =>
-                        const SizedBox(width: 16),
+                    separatorBuilder: (_, __) {
+                      return const SizedBox(width: 14);
+                    },
                     itemBuilder: (context, index) {
+                      final book = newArrivals[index];
+
                       return BookCard(
-                        book: newArrivals[index],
+                        book: book,
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (_) => BookDetailsScreen(
-                                book: newArrivals[index],
+                                book: book,
                                 similarBooks: books
-                                    .where((book) => book.id != newArrivals[index].id)
+                                    .where(
+                                      (item) => item.id != book.id,
+                                    )
                                     .take(3)
                                     .toList(),
                               ),
@@ -389,6 +312,6 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
       ),
-    );
+  );
   }
 }

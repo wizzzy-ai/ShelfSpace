@@ -12,12 +12,16 @@ class WishlistService extends ChangeNotifier {
   List<Book> get items => List.unmodifiable(_items);
 
   bool contains(Book book) {
-    return _items.any((item) => item.id == book.id);
+    return _items.any(
+      (item) => item.id == book.id,
+    );
   }
 
   void toggle(Book book) {
     if (contains(book)) {
-      _items.removeWhere((item) => item.id == book.id);
+      _items.removeWhere(
+        (item) => item.id == book.id,
+      );
     } else {
       _items.add(book);
     }
@@ -26,7 +30,10 @@ class WishlistService extends ChangeNotifier {
   }
 
   void remove(Book book) {
-    _items.removeWhere((item) => item.id == book.id);
+    _items.removeWhere(
+      (item) => item.id == book.id,
+    );
+
     notifyListeners();
   }
 

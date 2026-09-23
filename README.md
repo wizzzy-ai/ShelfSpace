@@ -1,4 +1,4 @@
-# Biblira - Book Store App
+# ShelfSpace - Book Store App
 
 A full-stack mobile/web application for browsing, searching, and purchasing books, featuring user auth, catalog management, cart, wishlist, ratings & reviews, order tracking, and an admin panel.
 
@@ -11,7 +11,7 @@ A full-stack mobile/web application for browsing, searching, and purchasing book
 - ⭐ Ratings and Reviews
 - 📦 Order Tracking
 - 👤 User Profile Management
-- 🎨 Beautiful UI with Burgundy + Cream theme
+- 🎨 Beautiful UI with Dark Navy Blue + Cyan + Magenta/Purple theme
 
 ## Getting Started
 
