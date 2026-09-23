@@ -1,17 +1,33 @@
-# city_guide
+# Biblira - Book Store App
 
-A new Flutter project.
+A full-stack mobile/web application for browsing, searching, and purchasing books, featuring user auth, catalog management, cart, wishlist, ratings & reviews, order tracking, and an admin panel.
+
+## Features
+
+- 🔐 User Authentication (Login, Register, Forgot Password)
+- 📚 Book Catalog with Search and Filters
+- ❤️ Wishlist functionality
+- 🛒 Shopping Cart with Checkout
+- ⭐ Ratings and Reviews
+- 📦 Order Tracking
+- 👤 User Profile Management
+- 🎨 Beautiful UI with Burgundy + Cream theme
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+This project is a Flutter application. To get started:
 
-A few resources to get you started if this is your first Flutter project:
+1. Make sure you have Flutter installed
+2. Clone the repository
+3. Run `flutter pub get` to install dependencies
+4. Run `flutter run` to start the app
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Tech Stack
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- Flutter
+- Dart
+- Provider (State Management)
+
+## License
+
+This project is licensed under the MIT License.
