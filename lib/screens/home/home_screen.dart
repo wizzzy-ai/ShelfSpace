@@ -62,19 +62,6 @@ class HomeScreen extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Image.asset(
-                      'assets/images/ShelfSpace.jpg',
-                      height: 40,
-                      width: 40,
-                      errorBuilder: (_, __, ___) {
-                        return const Icon(
-                          Icons.menu_book_rounded,
-                          size: 40,
-                          color: AppColors.burgundy,
-                        );
-                      },
-                    ),
-                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,

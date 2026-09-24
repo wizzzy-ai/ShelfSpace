@@ -24,66 +24,66 @@ class BookDetailsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.cream,
       appBar: AppBar(
-        title: Row(
-          children: [
-            Image.asset(
-              'assets/images/ShelfSpace.jpg',
-              height: 32,
-              width: 32,
-              errorBuilder: (_, __, ___) {
-                return const Icon(
-                  Icons.menu_book_rounded,
-                  size: 32,
-                  color: AppColors.burgundy,
-                );
-              },
-            ),
-            const SizedBox(width: 8),
-            const Text('Book Details'),
-          ],
-        ),
         backgroundColor: AppColors.cream,
         foregroundColor: AppColors.dark,
         elevation: 0,
-        centerTitle: true,
+        titleSpacing: 0,
+        centerTitle: false,
+        title: const Text(
+          'Book Details',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         actions: [
-          AnimatedBuilder(
-            animation: WishlistService.instance,
-            builder: (context, _) {
-              final isWishlisted =
-                  WishlistService.instance.contains(book);
+          SizedBox(
+            width: 48,
+            height: 48,
+            child: AnimatedBuilder(
+              animation: WishlistService.instance,
+              builder: (context, _) {
+                final isWishlisted =
+                    WishlistService.instance.contains(book);
 
-              return IconButton(
-                tooltip: isWishlisted
-                    ? 'Remove from wishlist'
-                    : 'Add to wishlist',
-                onPressed: () {
-                  WishlistService.instance.toggle(book);
+                return IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 40,
+                    minHeight: 40,
+                  ),
+                  splashRadius: 22,
+                  tooltip: isWishlisted
+                      ? 'Remove from wishlist'
+                      : 'Add to wishlist',
+                  onPressed: () {
+                    WishlistService.instance.toggle(book);
 
-                  ScaffoldMessenger.of(context)
-                    ..hideCurrentSnackBar()
-                    ..showSnackBar(
-                      SnackBar(
-                        duration: const Duration(milliseconds: 900),
-                        content: Text(
-                          isWishlisted
-                              ? 'Removed from wishlist'
-                              : 'Added to wishlist',
+                    ScaffoldMessenger.of(context)
+                      ..hideCurrentSnackBar()
+                      ..showSnackBar(
+                        SnackBar(
+                          duration: const Duration(milliseconds: 900),
+                          content: Text(
+                            isWishlisted
+                                ? 'Removed from wishlist'
+                                : 'Added to wishlist',
+                          ),
                         ),
-                      ),
-                    );
-                },
-                icon: Icon(
-                  isWishlisted
-                      ? Icons.favorite_rounded
-                      : Icons.favorite_border_rounded,
-                  color: isWishlisted
-                      ? AppColors.burgundy
-                      : AppColors.dark,
-                ),
-              );
-            },
+                      );
+                  },
+                  icon: Icon(
+                    isWishlisted
+                        ? Icons.favorite_rounded
+                        : Icons.favorite_border_rounded,
+                    size: 22,
+                    color: isWishlisted
+                        ? AppColors.burgundy
+                        : AppColors.dark,
+                  ),
+                );
+              },
+            ),
           ),
+          const SizedBox(width: 4),
         ],
       ),
       body: LayoutBuilder(
