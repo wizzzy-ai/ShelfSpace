@@ -459,17 +459,6 @@ class _EmptyCart extends StatelessWidget {
                 fontSize: 13,
               ),
             ),
-            const SizedBox(height: 22),
-            SizedBox(
-              width: 190,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: () {},
-                child: const Text(
-                  'Continue Shopping',
-                ),
-              ),
-            ),
           ],
         ),
       ),
