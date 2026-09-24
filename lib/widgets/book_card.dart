@@ -165,12 +165,16 @@ class BookCard extends StatelessWidget {
                           ),
                         );
                     },
-                    child: const Padding(
-                      padding: EdgeInsets.all(7),
+                    child: Padding(
+                      padding: const EdgeInsets.all(7),
                       child: Icon(
-                        Icons.favorite_border_rounded,
+                        isWishlisted
+                            ? Icons.favorite_rounded
+                            : Icons.favorite_border_rounded,
                         size: 20,
-                        color: AppColors.dark,
+                        color: isWishlisted
+                            ? AppColors.burgundy
+                            : AppColors.dark,
                       ),
                     ),
                   ),
