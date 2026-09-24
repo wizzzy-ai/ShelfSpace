@@ -473,7 +473,7 @@ class _SearchScreenState extends State<SearchScreen> {
         title: Row(
           children: [
             Image.asset(
-              'assets/images/ShelfSpace.jpg',
+              'assets/icons/app_icon.png',
               height: 32,
               width: 32,
               errorBuilder: (_, __, ___) {

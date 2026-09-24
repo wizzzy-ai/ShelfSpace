@@ -13,7 +13,7 @@ class AboutShelfSpaceScreen extends StatelessWidget {
         title: Row(
           children: [
             Image.asset(
-              'assets/images/ShelfSpace.jpg',
+              'assets/icons/app_icon.png',
               height: 32,
               width: 32,
               errorBuilder: (_, __, ___) {
@@ -62,7 +62,7 @@ class AboutShelfSpaceScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(22),
                     ),
                     child: Image.asset(
-                      'assets/images/ShelfSpace.jpg',
+                      'assets/icons/app_icon.png',
                       errorBuilder: (_, __, ___) {
                         return const Icon(
                           Icons.auto_stories_rounded,

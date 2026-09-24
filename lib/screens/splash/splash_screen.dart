@@ -102,15 +102,22 @@ class _SplashScreenState extends State<SplashScreen>
                     color: AppColors.cream,
                     borderRadius: BorderRadius.circular(28),
                   ),
-                  child: Image.asset(
-                    'assets/images/ShelfSpace.jpg',
-                    errorBuilder: (_, __, ___) {
-                      return const Icon(
-                        Icons.auto_stories_rounded,
-                        size: 48,
-                        color: AppColors.burgundy,
-                      );
-                    },
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Image.asset(
+                        'assets/icons/app_icon.png',
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) {
+                          return const Icon(
+                            Icons.auto_stories_rounded,
+                            size: 48,
+                            color: AppColors.burgundy,
+                          );
+                        },
+                      ),
+                    ),
                   ),
                 ),
 

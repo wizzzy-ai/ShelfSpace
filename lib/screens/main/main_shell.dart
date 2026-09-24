@@ -241,7 +241,7 @@ class _MainShellState extends State<MainShell> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: Image.asset(
-              'assets/images/ShelfSpace.jpg',
+              'assets/icons/app_icon.png',
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => const Icon(
                 Icons.auto_stories_rounded,
