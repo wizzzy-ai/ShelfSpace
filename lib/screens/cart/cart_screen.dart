@@ -18,7 +18,7 @@ class CartScreen extends StatelessWidget {
               'assets/icons/app_icon.png',
               height: 32,
               width: 32,
-              errorBuilder: (_, __, ___) {
+              errorBuilder: (_, _, _) {
                 return const Icon(
                   Icons.menu_book_rounded,
                   size: 32,
@@ -92,7 +92,7 @@ class CartScreen extends StatelessWidget {
                     20,
                   ),
                   itemCount: items.length,
-                  separatorBuilder: (_, __) {
+                  separatorBuilder: (_, _) {
                     return const SizedBox(height: 12);
                   },
                   itemBuilder: (context, index) {
@@ -142,7 +142,7 @@ class _CartItemCard extends StatelessWidget {
               width: 88,
               height: 118,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) {
+              errorBuilder: (_, _, _) {
                 return Container(
                   width: 88,
                   height: 118,

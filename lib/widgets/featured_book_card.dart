@@ -110,7 +110,7 @@ class FeaturedBookCard extends StatelessWidget {
                           width: imageWidth,
                           height: imageHeight,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) {
+                          errorBuilder: (_, _, _) {
                             return Container(
                               width: imageWidth,
                               height: imageHeight,
@@ -176,7 +176,7 @@ class FeaturedBookCard extends StatelessWidget {
                   width: 76,
                   height: 112,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) {
+                  errorBuilder: (_, _, _) {
                     return Container(
                       width: 76,
                       height: 112,

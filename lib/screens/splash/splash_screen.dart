@@ -109,7 +109,7 @@ class _SplashScreenState extends State<SplashScreen>
                       child: Image.asset(
                         'assets/icons/app_icon.png',
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) {
+                        errorBuilder: (_, _, _) {
                           return const Icon(
                             Icons.auto_stories_rounded,
                             size: 48,

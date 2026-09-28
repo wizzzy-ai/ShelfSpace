@@ -243,7 +243,7 @@ class _MainShellState extends State<MainShell> {
             child: Image.asset(
               'assets/icons/app_icon.png',
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const Icon(
+              errorBuilder: (_, _, _) => const Icon(
                 Icons.auto_stories_rounded,
                 color: AppColors.cream,
                 size: 23,

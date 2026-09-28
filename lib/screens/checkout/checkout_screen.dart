@@ -244,38 +244,45 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     number: '2',
                     title: 'Payment Method',
                     icon: Icons.credit_card_outlined,
-                    child: Column(
-                      children: [
-                        _PaymentOption(
-                          title: 'Cash on Delivery',
-                          subtitle:
-                              'Pay when your order arrives',
-                          icon: Icons.payments_outlined,
-                          value: 'Cash on Delivery',
-                          groupValue:
-                              _selectedPaymentMethod,
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedPaymentMethod = value;
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 10),
-                        _PaymentOption(
-                          title: 'Online Payment',
-                          subtitle:
-                              'Pay securely online',
-                          icon: Icons.credit_card_outlined,
-                          value: 'Online Payment',
-                          groupValue:
-                              _selectedPaymentMethod,
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedPaymentMethod = value;
-                            });
-                          },
-                        ),
-                      ],
+                    child: RadioGroup<String>(
+                      groupValue: _selectedPaymentMethod,
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() {
+                            _selectedPaymentMethod = value;
+                          });
+                        }
+                      },
+                      child: Column(
+                        children: [
+                          _PaymentOption(
+                            title: 'Cash on Delivery',
+                            subtitle:
+                                'Pay when your order arrives',
+                            icon: Icons.payments_outlined,
+                            value: 'Cash on Delivery',
+                            groupValue: _selectedPaymentMethod,
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedPaymentMethod = value;
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 10),
+                          _PaymentOption(
+                            title: 'Online Payment',
+                            subtitle: 'Pay securely online',
+                            icon: Icons.credit_card_outlined,
+                            value: 'Online Payment',
+                            groupValue: _selectedPaymentMethod,
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedPaymentMethod = value;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
 
@@ -592,12 +599,6 @@ class _PaymentOption extends StatelessWidget {
             ),
             Radio<String>(
               value: value,
-              groupValue: groupValue,
-              onChanged: (newValue) {
-                if (newValue != null) {
-                  onChanged(newValue);
-                }
-              },
               activeColor: AppColors.burgundy,
             ),
           ],
