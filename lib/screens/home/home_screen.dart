@@ -4,7 +4,7 @@ import '../../core/constants/app_colors.dart';
 import '../../services/mock_book_service.dart';
 import '../../widgets/book_card.dart';
 import '../../widgets/category_card.dart';
-import '../../widgets/featured_book_card.dart';
+import '../../widgets/featured_book_banner.dart';
 import '../../widgets/notification_bell.dart';
 
 import '../../widgets/section_header.dart';

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=ShelfSpace
+Comment=Your world of books
+Exec=city_guide
+Icon=shelfspace
+Terminal=false
+Categories=Education;Literature;
