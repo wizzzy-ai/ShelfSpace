@@ -97,7 +97,7 @@ class NotificationsScreen extends StatelessWidget {
               24,
             ),
             itemCount: notifications.length,
-            separatorBuilder: (_, __) {
+            separatorBuilder: (_, _) {
               return const SizedBox(height: 10);
             },
             itemBuilder: (context, index) {

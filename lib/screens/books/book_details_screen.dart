@@ -210,7 +210,7 @@ class BookDetailsScreen extends StatelessWidget {
               width: width,
               height: height,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) {
+              errorBuilder: (_, _, _) {
                 return Container(
                   color: AppColors.border,
                   child: const Icon(
@@ -680,7 +680,7 @@ class BookDetailsScreen extends StatelessWidget {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: books.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 14),
+            separatorBuilder: (_, _) => const SizedBox(width: 14),
             itemBuilder: (context, index) {
               final similarBook = books[index];
 
@@ -742,7 +742,7 @@ class BookDetailsScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              if (action != null) action,
+              ?action,
             ],
           ),
           const SizedBox(height: 14),

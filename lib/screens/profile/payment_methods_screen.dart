@@ -398,7 +398,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                 110,
               ),
               itemCount: _paymentMethods.length,
-              separatorBuilder: (_, __) =>
+              separatorBuilder: (_, _) =>
                   const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final method = _paymentMethods[index];

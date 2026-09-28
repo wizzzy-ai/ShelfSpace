@@ -33,7 +33,7 @@ class OrdersScreen extends StatelessWidget {
               28,
             ),
             itemCount: orders.length,
-            separatorBuilder: (_, __) =>
+            separatorBuilder: (_, _) =>
                 const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final order = orders[index];
@@ -314,7 +314,7 @@ class _OrderDetailsSheet extends StatelessWidget {
                               height: 70,
                               fit: BoxFit.cover,
                               errorBuilder:
-                                  (_, __, ___) {
+                                  (_, _, _) {
                                 return Container(
                                   width: 54,
                                   height: 70,

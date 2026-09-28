@@ -101,7 +101,7 @@ class BookCard extends StatelessWidget {
                   width: width,
                   height: coverHeight,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) {
+                  errorBuilder: (_, _, _) {
                     return Container(
                       width: width,
                       height: coverHeight,

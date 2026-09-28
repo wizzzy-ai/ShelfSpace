@@ -476,7 +476,7 @@ class _SearchScreenState extends State<SearchScreen> {
               'assets/icons/app_icon.png',
               height: 32,
               width: 32,
-              errorBuilder: (_, __, ___) {
+              errorBuilder: (_, _, _) {
                 return const Icon(
                   Icons.menu_book_rounded,
                   size: 32,
