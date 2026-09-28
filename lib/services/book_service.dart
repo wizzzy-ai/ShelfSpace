@@ -124,19 +124,6 @@ class BookService {
     final saleInfo = _safeMap(json['saleInfo']);
     final imageLinks = _safeMap(volumeInfo['imageLinks']);
 
-    // Extract ISBN
-    final identifiers = (volumeInfo['industryIdentifiers'] as List?) ?? [];
-    String isbn = '';
-    if (identifiers.isNotEmpty) {
-      for (var item in identifiers) {
-        final map = _safeMap(item);
-        if (map['type'] == 'ISBN_13' || map['type'] == 'ISBN_10') {
-          isbn = map['identifier'] as String? ?? '';
-          break;
-        }
-      }
-    }
-
     // Extract authors
     final authorsList = (volumeInfo['authors'] as List?) ?? [];
     final authors = authorsList.map((a) => a.toString()).toList();
@@ -147,9 +134,6 @@ class BookService {
     final genre = categories.isEmpty
         ? 'Fiction'
         : (categories.first as String? ?? 'Fiction');
-
-    // Extract published date
-    final publishedDate = volumeInfo['publishedDate'] as String?;
 
     // Extract price
     final listPrice = _safeMap(saleInfo['listPrice']);
@@ -182,7 +166,7 @@ class BookService {
 
   /// Safely cast to Map
   static Map<String, dynamic> _safeMap(dynamic value) {
-    return value is Map ? Map<String, dynamic>.from(value as Map) : {};
+    return value is Map ? Map<String, dynamic>.from(value) : {};
   }
 
   /// Strip HTML tags from text
