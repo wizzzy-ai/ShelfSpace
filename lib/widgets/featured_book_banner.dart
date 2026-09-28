@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 import 'featured_book_card.dart';
 
 class FeaturedBookBanner extends FeaturedBookCard {
