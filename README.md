@@ -1,32 +1,23 @@
-# bookstore
+# ShelfSpace - Book Store App
 
-Book e-commerce catalog with real book API integration, categories, bestsellers, new arrivals, and CRUD support.
+A full-stack mobile/web application for browsing, searching, and purchasing books, featuring user auth, catalog management, cart, wishlist, ratings & reviews, order tracking, and an admin panel.
 
 ## Features
 
-- Real book catalog data from Google Books API
-- Fetch books by search term and categories
-- Book details screen with publication, rating, price, publisher, and stock info
-- Genre/category browsing
-- Bestseller and new-arrival sections
-- Add, update, and delete support via the service layer
-- Flutter UI integration to display catalog content in a bookstore storefront
+- 🔐 User Authentication (Login, Register, Forgot Password)
+- 📚 Book Catalog with Search and Filters
+- ❤️ Wishlist functionality
+- 🛒 Shopping Cart with Checkout
+- ⭐ Ratings and Reviews
+- 📦 Order Tracking
+- 👤 User Profile Management
+- 🎨 Beautiful UI with Dark Navy Blue + Cyan + Magenta/Purple theme
 
-## Tech stack
+## Getting Started
 
-- Dart
-- Flutter
-- Google Books API
-- HTTP service layer
+This project is a Flutter application. To get started:
 
-## Run locally
-
-1. Install Flutter.
-2. Run:
-
-   flutter pub get
-   flutter run -d chrome
-
-## Notes
-
-This project uses Google Books API as the real catalog data source. The service layer is structured so it can be swapped to a custom backend or REST API when available.
+1. Make sure you have Flutter installed
+2. Clone the repository
+3. Run `flutter pub get` to install dependencies
+4. Run `flutter run` to start the app
