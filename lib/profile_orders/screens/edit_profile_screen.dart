@@ -191,7 +191,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             Text('Payment method', style: titleStyle),
             const SizedBox(height: 8),
             DropdownButtonFormField<PaymentType>(
-              value: _paymentType,
+              initialValue: _paymentType,
               decoration: const InputDecoration(
                 labelText: 'Type',
                 border: OutlineInputBorder(),
