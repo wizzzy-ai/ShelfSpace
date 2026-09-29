@@ -447,6 +447,7 @@ class BookDetailsScreen extends StatelessWidget {
 
   Widget _buildAboutSection(BuildContext context) {
     return _buildSectionCard(
+      context: context,
       title: 'About this book',
       child: Text(
         book.description,
@@ -461,21 +462,24 @@ class BookDetailsScreen extends StatelessWidget {
 
   Widget _buildBookInformation(BuildContext context) {
     return _buildSectionCard(
+      context: context,
       title: 'Book Information',
       child: Column(
         children: [
-          _infoRow('Title', book.title),
-          _infoDivider(),
-          _infoRow('Author', book.author),
-          _infoDivider(),
-          _infoRow('Genre', book.genre),
-          _infoDivider(),
+          _infoRow(context, 'Title', book.title),
+          _infoDivider(context),
+          _infoRow(context, 'Author', book.author),
+          _infoDivider(context),
+          _infoRow(context, 'Genre', book.genre),
+          _infoDivider(context),
           _infoRow(
+            context,
             'Rating',
             '${book.rating} / 5',
           ),
-          _infoDivider(),
+          _infoDivider(context),
           _infoRow(
+            context,
             'Reviews',
             '${book.reviewCount}',
           ),
@@ -486,6 +490,7 @@ class BookDetailsScreen extends StatelessWidget {
 
   Widget _buildReviewsPreview(BuildContext context) {
     return _buildSectionCard(
+      context: context,
       title: 'Customer Reviews',
       action: TextButton(
         onPressed: () {
@@ -547,6 +552,7 @@ class BookDetailsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           _reviewPreview(
+            context: context,
             name: 'Daniel',
             date: '2 days ago',
             text:
@@ -555,6 +561,7 @@ class BookDetailsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           _reviewPreview(
+            context: context,
             name: 'Hannah',
             date: '1 week ago',
             text:
@@ -567,6 +574,7 @@ class BookDetailsScreen extends StatelessWidget {
   }
 
   Widget _reviewPreview({
+    required BuildContext context,
     required String name,
     required String date,
     required String text,
@@ -576,7 +584,7 @@ class BookDetailsScreen extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.cream,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: Theme.of(context).colorScheme.outlineVariant,
@@ -706,6 +714,7 @@ class BookDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildSectionCard({
+    required BuildContext context,
     required String title,
     required Widget child,
     Widget? action,
@@ -752,7 +761,7 @@ class BookDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _infoRow(String label, String value) {
+  Widget _infoRow(BuildContext context, String label, String value) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -780,7 +789,7 @@ class BookDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _infoDivider() {
+  Widget _infoDivider(BuildContext context) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 12),
       child: Divider(

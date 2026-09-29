@@ -216,7 +216,7 @@ class _OrderDetailsSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.cream,
+      color: Theme.of(context).colorScheme.surface,
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
           20,
@@ -271,7 +271,7 @@ class _OrderDetailsSheet extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            _buildTrackingCard(),
+            _buildTrackingCard(context),
 
             const SizedBox(height: 20),
 
@@ -490,7 +490,7 @@ class _OrderDetailsSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildTrackingCard() {
+  Widget _buildTrackingCard(BuildContext context) {
     final steps = [
       'Processing',
       'Shipped',
