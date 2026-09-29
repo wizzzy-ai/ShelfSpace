@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'core/theme/app_theme.dart';
+import 'core/theme/app_theme_controller.dart';
 import 'screens/splash/splash_screen.dart';
 
 void main() {
@@ -12,11 +13,16 @@ class ShelfSpaceApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'ShelfSpace',
-      theme: AppTheme.lightTheme,
-      home: const SplashScreen(),
+    return AnimatedBuilder(
+      animation: AppThemeController.instance,
+      builder: (context, _) => MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'ShelfSpace',
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: AppThemeController.instance.themeMode,
+        home: const SplashScreen(),
+      ),
     );
   }
 }

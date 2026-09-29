@@ -50,7 +50,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (context, setSheetState) {
@@ -71,7 +71,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                         width: 45,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: AppColors.border,
+                          color: Theme.of(context).colorScheme.outlineVariant,
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
@@ -89,8 +89,8 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                     const SizedBox(height: 8),
                     Text(
                       widget.book.title,
-                      style: const TextStyle(
-                        color: AppColors.mutedText,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: 22),
@@ -173,10 +173,10 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
     final rating = widget.book.rating;
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Ratings & Reviews'),
-        backgroundColor: AppColors.cream,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -223,10 +223,10 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: AppColors.border,
+          color: Theme.of(context).colorScheme.outlineVariant,
         ),
       ),
       child: Row(
@@ -259,8 +259,8 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                 const SizedBox(height: 5),
                 Text(
                   '${widget.book.reviewCount} reviews',
-                  style: const TextStyle(
-                    color: AppColors.mutedText,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 11,
                   ),
                 ),
@@ -319,9 +319,9 @@ class _RatingBar extends StatelessWidget {
         children: [
           Text(
             '$stars',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
-              color: AppColors.mutedText,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(width: 3),
@@ -337,7 +337,7 @@ class _RatingBar extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: percentage,
                 minHeight: 6,
-                backgroundColor: AppColors.border,
+                backgroundColor: Theme.of(context).colorScheme.outlineVariant,
                 color: AppColors.burgundy,
               ),
             ),
@@ -370,10 +370,10 @@ class _ReviewCardState extends State<_ReviewCard> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.border,
+          color: Theme.of(context).colorScheme.outlineVariant,
         ),
       ),
       child: Column(
@@ -411,8 +411,8 @@ class _ReviewCardState extends State<_ReviewCard> {
                     const SizedBox(height: 2),
                     Text(
                       widget.review.time,
-                      style: const TextStyle(
-                        color: AppColors.mutedText,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 10,
                       ),
                     ),
@@ -427,7 +427,7 @@ class _ReviewCardState extends State<_ReviewCard> {
                     size: 15,
                     color: index < widget.review.rating
                         ? Colors.amber
-                        : AppColors.border,
+                        : Theme.of(context).colorScheme.outlineVariant,
                   ),
                 ),
               ),
@@ -436,8 +436,8 @@ class _ReviewCardState extends State<_ReviewCard> {
           const SizedBox(height: 12),
           Text(
             widget.review.text,
-            style: const TextStyle(
-              color: AppColors.mutedText,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               height: 1.5,
               fontSize: 13,
             ),
@@ -458,14 +458,14 @@ class _ReviewCardState extends State<_ReviewCard> {
                   size: 17,
                   color: _liked
                       ? AppColors.burgundy
-                      : AppColors.mutedText,
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 label: Text(
                   '$likes',
                   style: TextStyle(
                     color: _liked
                         ? AppColors.burgundy
-                        : AppColors.mutedText,
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),

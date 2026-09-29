@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/theme/app_theme_controller.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -11,16 +12,18 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _notificationsEnabled = true;
-  bool _darkModeEnabled = false;
   bool _orderUpdatesEnabled = true;
   bool _marketingEnabled = false;
 
   String _selectedLanguage = 'English';
 
+  bool get _darkModeEnabled =>
+      Theme.of(context).brightness == Brightness.dark;
+
   void _showLanguagePicker() {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       builder: (sheetContext) {
         return SafeArea(
           child: Padding(
@@ -39,7 +42,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     width: 45,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.border,
+                      color: Theme.of(sheetContext).colorScheme.outlineVariant,
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
@@ -94,7 +97,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showThemePicker() {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       builder: (sheetContext) {
         return SafeArea(
           child: Padding(
@@ -113,7 +116,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     width: 45,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.border,
+                      color: Theme.of(sheetContext).colorScheme.outlineVariant,
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
@@ -133,9 +136,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   subtitle: 'Use the ShelfSpace light theme',
                   selected: !_darkModeEnabled,
                   onTap: () {
-                    setState(() {
-                      _darkModeEnabled = false;
-                    });
+                    AppThemeController.instance
+                        .setThemeMode(ThemeMode.light);
                     Navigator.pop(sheetContext);
                   },
                 ),
@@ -146,9 +148,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   subtitle: 'Use the dark theme',
                   selected: _darkModeEnabled,
                   onTap: () {
-                    setState(() {
-                      _darkModeEnabled = true;
-                    });
+                    AppThemeController.instance
+                        .setThemeMode(ThemeMode.dark);
                     Navigator.pop(sheetContext);
                   },
                 ),
@@ -165,7 +166,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: AppColors.white,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           title: const Text('Delete account?'),
           content: const Text(
             'This action is permanent. Your account and associated data may be removed.',
@@ -175,10 +176,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onPressed: () {
                 Navigator.pop(dialogContext);
               },
-              child: const Text(
+              child: Text(
                 'Cancel',
                 style: TextStyle(
-                  color: AppColors.mutedText,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
@@ -205,10 +206,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Settings'),
-        backgroundColor: AppColors.cream,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
       ),
       body: ListView(
@@ -435,18 +436,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
+                Text(
                   'Your World of Books',
                   style: TextStyle(
-                    color: AppColors.mutedText,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 12,
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'Version 1.0.0',
                   style: TextStyle(
-                    color: AppColors.mutedText,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 11,
                   ),
                 ),
@@ -470,8 +471,8 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: const TextStyle(
-        color: AppColors.dark,
+      style: TextStyle(
+        color: Theme.of(context).colorScheme.onSurface,
         fontSize: 17,
         fontWeight: FontWeight.bold,
       ),
@@ -490,10 +491,10 @@ class _SettingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.border,
+          color: Theme.of(context).colorScheme.outlineVariant,
         ),
       ),
       child: Column(
@@ -552,7 +553,8 @@ class _SettingTile extends StatelessWidget {
                   Text(
                     title,
                     style: TextStyle(
-                      color: titleColor ?? AppColors.dark,
+                      color: titleColor ??
+                          Theme.of(context).colorScheme.onSurface,
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
                     ),
@@ -560,17 +562,17 @@ class _SettingTile extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: const TextStyle(
-                      color: AppColors.mutedText,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontSize: 12,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
-              color: AppColors.mutedText,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ],
         ),
@@ -627,8 +629,8 @@ class _SwitchTile extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: const TextStyle(
-                    color: AppColors.mutedText,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 12,
                   ),
                 ),
@@ -651,11 +653,11 @@ class _TileDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
+    return Padding(
       padding: EdgeInsets.only(left: 72),
       child: Divider(
         height: 1,
-        color: AppColors.border,
+        color: Theme.of(context).colorScheme.outlineVariant,
       ),
     );
   }
@@ -689,7 +691,7 @@ class _LanguageOption extends StatelessWidget {
             : Icons.radio_button_off_rounded,
         color: selected
             ? AppColors.burgundy
-            : AppColors.mutedText,
+            : Theme.of(context).colorScheme.onSurfaceVariant,
       ),
     );
   }
@@ -713,7 +715,7 @@ class _ThemeOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.white,
+      color: Theme.of(context).colorScheme.surface,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         onTap: onTap,
@@ -725,7 +727,7 @@ class _ThemeOption extends StatelessWidget {
             border: Border.all(
               color: selected
                   ? AppColors.burgundy
-                  : AppColors.border,
+                  : Theme.of(context).colorScheme.outlineVariant,
             ),
           ),
           child: Row(
@@ -749,8 +751,8 @@ class _ThemeOption extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       subtitle,
-                      style: const TextStyle(
-                        color: AppColors.mutedText,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 12,
                       ),
                     ),

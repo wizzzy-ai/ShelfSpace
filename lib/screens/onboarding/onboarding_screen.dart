@@ -66,7 +66,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -80,7 +80,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   child: Text(
                     'Skip',
                     style: GoogleFonts.inter(
-                      color: AppColors.mutedText,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
@@ -129,7 +129,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           item.title,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.playfairDisplay(
-                            color: AppColors.dark,
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontSize: 31,
                             height: 1.15,
                             fontWeight: FontWeight.bold,
@@ -143,7 +143,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           item.description,
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
-                            color: AppColors.mutedText,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                             fontSize: 15,
                             height: 1.6,
                           ),
@@ -176,7 +176,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           decoration: BoxDecoration(
                             color: isActive
                                 ? AppColors.burgundy
-                                : AppColors.border,
+                                : Theme.of(context).colorScheme.outlineVariant,
                             borderRadius: BorderRadius.circular(20),
                           ),
                         );

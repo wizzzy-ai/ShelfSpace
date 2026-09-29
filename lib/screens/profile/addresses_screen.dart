@@ -41,7 +41,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (context, setSheetState) {
@@ -63,7 +63,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
                           width: 45,
                           height: 4,
                           decoration: BoxDecoration(
-                            color: AppColors.border,
+                            color: Theme.of(context).colorScheme.outlineVariant,
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
@@ -197,7 +197,7 @@ class _AddressesScreenState extends State<AddressesScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: AppColors.white,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           title: const Text('Remove address?'),
           content: const Text(
             'This address will be removed from your saved addresses.',
@@ -207,10 +207,10 @@ class _AddressesScreenState extends State<AddressesScreen> {
               onPressed: () {
                 Navigator.pop(dialogContext);
               },
-              child: const Text(
+              child: Text(
                 'Cancel',
                 style: TextStyle(
-                  color: AppColors.mutedText,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
@@ -233,10 +233,10 @@ class _AddressesScreenState extends State<AddressesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Saved Addresses'),
-        backgroundColor: AppColors.cream,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
       ),
       body: _addresses.isEmpty
@@ -311,11 +311,11 @@ class _AddressesScreenState extends State<AddressesScreen> {
               ),
             ),
             const SizedBox(height: 10),
-            const Text(
+            Text(
               'Add an address to make checkout faster and easier.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: AppColors.mutedText,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 height: 1.5,
               ),
             ),
@@ -348,10 +348,10 @@ class _AddressCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.border,
+          color: Theme.of(context).colorScheme.outlineVariant,
         ),
       ),
       child: Column(
@@ -414,15 +414,15 @@ class _AddressCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             city,
-            style: const TextStyle(
-              color: AppColors.mutedText,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             phone,
-            style: const TextStyle(
-              color: AppColors.mutedText,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ],

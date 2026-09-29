@@ -50,9 +50,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.cream,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.pop(context),
@@ -67,7 +67,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Text(
                 'Create your account.',
                 style: GoogleFonts.playfairDisplay(
-                  color: AppColors.dark,
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 34,
                   fontWeight: FontWeight.bold,
                 ),
@@ -78,7 +78,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Text(
                 'Join ShelfSpace and start discovering books you will love.',
                 style: GoogleFonts.inter(
-                  color: AppColors.mutedText,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   fontSize: 15,
                   height: 1.5,
                 ),
@@ -161,7 +161,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: Text(
                         'I agree to the Terms of Service and Privacy Policy.',
                         style: GoogleFonts.inter(
-                          color: AppColors.mutedText,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontSize: 13,
                           height: 1.4,
                         ),
@@ -190,7 +190,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   Text(
                     'Already have an account?',
                     style: GoogleFonts.inter(
-                      color: AppColors.mutedText,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontSize: 14,
                     ),
                   ),
@@ -217,7 +217,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Text(
       text,
       style: GoogleFonts.inter(
-        color: AppColors.dark,
+        color: Theme.of(context).colorScheme.onSurface,
         fontSize: 14,
         fontWeight: FontWeight.w600,
       ),

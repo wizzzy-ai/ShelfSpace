@@ -65,7 +65,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       barrierDismissible: false,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: AppColors.white,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -96,11 +96,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
               ),
               const SizedBox(height: 9),
-              const Text(
+              Text(
                 'Your order has been successfully created and is now being processed.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: AppColors.mutedText,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   height: 1.5,
                   fontSize: 13,
                 ),
@@ -127,9 +127,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.cream,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         title: const Text('Checkout'),
       ),
@@ -324,8 +324,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             ),
                           ),
                         ),
-                        const Divider(
-                          color: AppColors.border,
+                        Divider(
+                          color: Theme.of(context).colorScheme.outlineVariant,
                         ),
                         const SizedBox(height: 12),
                         _SummaryRow(
@@ -340,8 +340,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               '₦${cart.deliveryFee.toStringAsFixed(0)}',
                         ),
                         const SizedBox(height: 12),
-                        const Divider(
-                          color: AppColors.border,
+                        Divider(
+                          color: Theme.of(context).colorScheme.outlineVariant,
                         ),
                         const SizedBox(height: 12),
                         _SummaryRow(
@@ -370,7 +370,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         ),
                       ),
                     ),
-                    child: const Row(
+                    child: Row(
                       crossAxisAlignment:
                           CrossAxisAlignment.start,
                       children: [
@@ -384,7 +384,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           child: Text(
                             'Your checkout information is kept secure.',
                             style: TextStyle(
-                              color: AppColors.mutedText,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                               fontSize: 12,
                               height: 1.4,
                             ),
@@ -412,12 +412,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
                   const SizedBox(height: 8),
 
-                  const Center(
+                  Center(
                     child: Text(
                       'By placing your order, you agree to ShelfSpace\'s terms and conditions.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: AppColors.mutedText,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 10,
                         height: 1.4,
                       ),
@@ -452,10 +452,10 @@ class _CheckoutStep extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: AppColors.border,
+          color: Theme.of(context).colorScheme.outlineVariant,
         ),
       ),
       child: Column(
@@ -553,7 +553,7 @@ class _PaymentOption extends StatelessWidget {
           border: Border.all(
             color: selected
                 ? AppColors.burgundy
-                : AppColors.border,
+                : Theme.of(context).colorScheme.outlineVariant,
             width: selected ? 1.5 : 1,
           ),
         ),
@@ -589,8 +589,8 @@ class _PaymentOption extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(
                     subtitle,
-                    style: const TextStyle(
-                      color: AppColors.mutedText,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontSize: 11,
                     ),
                   ),
@@ -627,8 +627,8 @@ class _SummaryRow extends StatelessWidget {
           label,
           style: TextStyle(
             color: isTotal
-                ? AppColors.dark
-                : AppColors.mutedText,
+                ? Theme.of(context).colorScheme.onSurface
+                : Theme.of(context).colorScheme.onSurfaceVariant,
             fontSize: isTotal ? 16 : 13,
             fontWeight:
                 isTotal ? FontWeight.bold : FontWeight.normal,
@@ -640,7 +640,7 @@ class _SummaryRow extends StatelessWidget {
           style: TextStyle(
             color: isTotal
                 ? AppColors.burgundy
-                : AppColors.dark,
+                : Theme.of(context).colorScheme.onSurface,
             fontSize: isTotal ? 18 : 13,
             fontWeight: FontWeight.bold,
           ),
@@ -690,11 +690,11 @@ class _EmptyCheckout extends StatelessWidget {
                   ),
             ),
             const SizedBox(height: 9),
-            const Text(
+            Text(
               'Add a book to your cart before continuing to checkout.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: AppColors.mutedText,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 height: 1.5,
                 fontSize: 13,
               ),
