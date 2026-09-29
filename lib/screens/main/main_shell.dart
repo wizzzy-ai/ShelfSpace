@@ -63,7 +63,7 @@ class _MainShellState extends State<MainShell> {
         final isDesktop = width >= 1024;
 
         return Scaffold(
-          backgroundColor: AppColors.cream,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: Row(
             children: [
               if (isDesktop) _buildDesktopNavigation(),
@@ -107,7 +107,7 @@ class _MainShellState extends State<MainShell> {
           _currentIndex = index;
         });
       },
-      backgroundColor: AppColors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       indicatorColor: AppColors.burgundy.withValues(
         alpha: 0.10,
       ),
@@ -121,11 +121,11 @@ class _MainShellState extends State<MainShell> {
 
     return Container(
       width: 250,
-      decoration: const BoxDecoration(
-        color: AppColors.white,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
         border: Border(
           right: BorderSide(
-            color: AppColors.border,
+            color: Theme.of(context).colorScheme.outlineVariant,
           ),
         ),
       ),
@@ -252,7 +252,7 @@ class _MainShellState extends State<MainShell> {
           ),
         ),
         const SizedBox(width: 11),
-        const Expanded(
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -269,7 +269,7 @@ class _MainShellState extends State<MainShell> {
               Text(
                 'Your World of Books',
                 style: TextStyle(
-                  color: AppColors.mutedText,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   fontSize: 9,
                 ),
               ),
@@ -331,7 +331,7 @@ class _DesktopNavItem extends StatelessWidget {
                   selected ? selectedIcon : icon,
                   color: selected
                       ? AppColors.burgundy
-                      : AppColors.mutedText,
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
                   size: 22,
                 ),
                 const SizedBox(width: 12),
@@ -341,7 +341,7 @@ class _DesktopNavItem extends StatelessWidget {
                     style: TextStyle(
                       color: selected
                           ? AppColors.burgundy
-                          : AppColors.dark,
+                          : Theme.of(context).colorScheme.onSurface,
                       fontWeight: selected
                           ? FontWeight.w600
                           : FontWeight.w500,

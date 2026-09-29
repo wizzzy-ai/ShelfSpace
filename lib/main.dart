@@ -6,6 +6,7 @@ import 'profile_orders/data/mock_profile_orders_repository.dart';
 import 'profile_orders/data/profile_orders_repository.dart';
 import 'profile_orders/providers/orders_provider.dart';
 import 'profile_orders/providers/profile_provider.dart';
+import 'core/theme/app_theme_controller.dart';
 import 'screens/splash/splash_screen.dart';
 
 void main() {
@@ -35,6 +36,14 @@ class ShelfSpaceApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'ShelfSpace',
         theme: AppTheme.lightTheme,
+    return AnimatedBuilder(
+      animation: AppThemeController.instance,
+      builder: (context, _) => MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'ShelfSpace',
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: AppThemeController.instance.themeMode,
         home: const SplashScreen(),
       ),
     );

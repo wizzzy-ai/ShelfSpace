@@ -8,7 +8,7 @@ class AboutShelfSpaceScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Row(
           children: [
@@ -28,7 +28,7 @@ class AboutShelfSpaceScreen extends StatelessWidget {
             const Text('About ShelfSpace'),
           ],
         ),
-        backgroundColor: AppColors.cream,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -99,10 +99,10 @@ class AboutShelfSpaceScreen extends StatelessWidget {
             _SectionCard(
               title: 'About ShelfSpace',
               icon: Icons.menu_book_outlined,
-              child: const Text(
+              child: Text(
                 'ShelfSpace is a modern bookstore experience designed to make discovering, saving, and ordering books simple and enjoyable. Browse books across different genres, discover new arrivals, manage your wishlist, and keep track of your orders all in one place.',
                 style: TextStyle(
-                  color: AppColors.mutedText,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   height: 1.6,
                   fontSize: 14,
                 ),
@@ -114,10 +114,10 @@ class AboutShelfSpaceScreen extends StatelessWidget {
             _SectionCard(
               title: 'Our Mission',
               icon: Icons.auto_awesome_outlined,
-              child: const Text(
+              child: Text(
                 'Our goal is to connect readers with great books through a clean, convenient, and enjoyable digital bookstore experience.',
                 style: TextStyle(
-                  color: AppColors.mutedText,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   height: 1.6,
                   fontSize: 14,
                 ),
@@ -203,11 +203,11 @@ class AboutShelfSpaceScreen extends StatelessWidget {
 
             const SizedBox(height: 8),
 
-            const Text(
+            Text(
               '© 2026 ShelfSpace. All rights reserved.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: AppColors.mutedText,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 11,
               ),
             ),
@@ -235,10 +235,10 @@ class _SectionCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: AppColors.border,
+          color: Theme.of(context).colorScheme.outlineVariant,
         ),
       ),
       child: Column(
@@ -325,8 +325,8 @@ class _FeatureRow extends StatelessWidget {
               const SizedBox(height: 3),
               Text(
                 description,
-                style: const TextStyle(
-                  color: AppColors.mutedText,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   fontSize: 12,
                   height: 1.4,
                 ),
@@ -359,8 +359,8 @@ class _InfoRow extends StatelessWidget {
             width: 90,
             child: Text(
               label,
-              style: const TextStyle(
-                color: AppColors.mutedText,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 12,
               ),
             ),

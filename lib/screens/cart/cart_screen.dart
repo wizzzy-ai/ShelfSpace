@@ -10,7 +10,7 @@ class CartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Row(
           children: [
@@ -30,7 +30,7 @@ class CartScreen extends StatelessWidget {
             const Text('My Cart'),
           ],
         ),
-        backgroundColor: AppColors.cream,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         actions: [
           AnimatedBuilder(
@@ -126,10 +126,10 @@ class _CartItemCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: AppColors.border,
+          color: Theme.of(context).colorScheme.outlineVariant,
         ),
       ),
       child: Row(
@@ -146,10 +146,10 @@ class _CartItemCard extends StatelessWidget {
                 return Container(
                   width: 88,
                   height: 118,
-                  color: AppColors.border,
-                  child: const Icon(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                  child: Icon(
                     Icons.menu_book_rounded,
-                    color: AppColors.mutedText,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     size: 32,
                   ),
                 );
@@ -176,8 +176,8 @@ class _CartItemCard extends StatelessWidget {
                   book.author,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.mutedText,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 12,
                   ),
                 ),
@@ -301,11 +301,11 @@ class _CartSummary extends StatelessWidget {
         20,
         20,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.white,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
         border: Border(
           top: BorderSide(
-            color: AppColors.border,
+            color: Theme.of(context).colorScheme.outlineVariant,
           ),
         ),
       ),
@@ -334,8 +334,8 @@ class _CartSummary extends StatelessWidget {
               value: '₦${cart.deliveryFee.toStringAsFixed(0)}',
             ),
             const SizedBox(height: 12),
-            const Divider(
-              color: AppColors.border,
+            Divider(
+              color: Theme.of(context).colorScheme.outlineVariant,
             ),
             const SizedBox(height: 12),
             _SummaryRow(
@@ -387,8 +387,8 @@ class _SummaryRow extends StatelessWidget {
           label,
           style: TextStyle(
             color: isTotal
-                ? AppColors.dark
-                : AppColors.mutedText,
+                ? Theme.of(context).colorScheme.onSurface
+                : Theme.of(context).colorScheme.onSurfaceVariant,
             fontSize: isTotal ? 16 : 13,
             fontWeight:
                 isTotal ? FontWeight.bold : FontWeight.normal,
@@ -400,7 +400,7 @@ class _SummaryRow extends StatelessWidget {
           style: TextStyle(
             color: isTotal
                 ? AppColors.burgundy
-                : AppColors.dark,
+                : Theme.of(context).colorScheme.onSurface,
             fontSize: isTotal ? 18 : 14,
             fontWeight: FontWeight.bold,
           ),
@@ -450,11 +450,11 @@ class _EmptyCart extends StatelessWidget {
                   ),
             ),
             const SizedBox(height: 10),
-            const Text(
+            Text(
               'Add books you want to purchase and they will appear here.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: AppColors.mutedText,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 height: 1.5,
                 fontSize: 13,
               ),

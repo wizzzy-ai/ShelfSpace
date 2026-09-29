@@ -48,9 +48,9 @@ class NotificationsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.cream,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         title: const Text('Notifications'),
         actions: [
@@ -154,11 +154,11 @@ class NotificationsScreen extends StatelessWidget {
                   ),
             ),
             const SizedBox(height: 10),
-            const Text(
+            Text(
               'You are all caught up. New updates will appear here.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: AppColors.mutedText,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 height: 1.5,
               ),
             ),
@@ -196,7 +196,7 @@ class _NotificationCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: notification.isRead
-                  ? AppColors.border
+                  ? Theme.of(context).colorScheme.outlineVariant
                   : AppColors.burgundy.withValues(
                       alpha: 0.25,
                     ),
@@ -248,8 +248,8 @@ class _NotificationCard extends StatelessWidget {
                     const SizedBox(height: 5),
                     Text(
                       notification.message,
-                      style: const TextStyle(
-                        color: AppColors.mutedText,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 12,
                         height: 1.4,
                       ),
@@ -259,7 +259,7 @@ class _NotificationCard extends StatelessWidget {
                       notification.time,
                       style: TextStyle(
                         color: notification.isRead
-                            ? AppColors.mutedText
+                            ? Theme.of(context).colorScheme.onSurfaceVariant
                             : AppColors.burgundy,
                         fontSize: 11,
                         fontWeight: notification.isRead

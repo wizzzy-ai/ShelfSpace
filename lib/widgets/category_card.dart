@@ -19,7 +19,7 @@ class CategoryCard extends StatelessWidget {
     return SizedBox(
       width: 92,
       child: Material(
-        color: AppColors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           onTap: onTap,
@@ -32,7 +32,7 @@ class CategoryCard extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: AppColors.border,
+                color: Theme.of(context).colorScheme.outlineVariant,
               ),
             ),
             child: Column(
@@ -59,8 +59,8 @@ class CategoryCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: AppColors.dark,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                   ),

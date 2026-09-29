@@ -105,11 +105,11 @@ class BookCard extends StatelessWidget {
                     return Container(
                       width: width,
                       height: coverHeight,
-                      color: AppColors.border,
-                      child: const Icon(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                      child: Icon(
                         Icons.menu_book_rounded,
                         size: 40,
-                        color: AppColors.mutedText,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     );
                   },
@@ -144,7 +144,7 @@ class BookCard extends StatelessWidget {
                 top: 8,
                 right: 8,
                 child: Material(
-                  color: AppColors.white,
+                  color: Theme.of(context).colorScheme.surface,
                   shape: const CircleBorder(),
                   child: InkWell(
                     customBorder: const CircleBorder(),
@@ -174,7 +174,7 @@ class BookCard extends StatelessWidget {
                         size: 20,
                         color: isWishlisted
                             ? AppColors.burgundy
-                            : AppColors.dark,
+                            : Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                   ),
@@ -189,8 +189,8 @@ class BookCard extends StatelessWidget {
             book.title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: AppColors.dark,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),
@@ -202,8 +202,8 @@ class BookCard extends StatelessWidget {
             book.author,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: AppColors.mutedText,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: 11,
             ),
           ),
@@ -220,8 +220,8 @@ class BookCard extends StatelessWidget {
               const SizedBox(width: 3),
               Text(
                 '${book.rating}',
-                style: const TextStyle(
-                  color: AppColors.dark,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                 ),

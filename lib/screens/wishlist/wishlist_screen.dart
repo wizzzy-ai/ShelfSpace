@@ -11,9 +11,9 @@ class WishlistScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.cream,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         title: Row(
           children: [
@@ -48,9 +48,9 @@ class WishlistScreen extends StatelessWidget {
                 onPressed: () {
                   _showClearWishlistDialog(context);
                 },
-                icon: const Icon(
+                icon: Icon(
                   Icons.delete_outline_rounded,
-                  color: AppColors.dark,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               );
             },
@@ -137,11 +137,11 @@ class WishlistScreen extends StatelessWidget {
                   ),
             ),
             const SizedBox(height: 10),
-            const Text(
+            Text(
               'Save books you love and they will appear here.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: AppColors.mutedText,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 height: 1.5,
               ),
             ),
@@ -166,7 +166,7 @@ class WishlistScreen extends StatelessWidget {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: AppColors.white,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           title: const Text('Clear wishlist?'),
           content: const Text(
             'This will remove all books from your wishlist.',
@@ -176,10 +176,10 @@ class WishlistScreen extends StatelessWidget {
               onPressed: () {
                 Navigator.pop(dialogContext);
               },
-              child: const Text(
+              child: Text(
                 'Cancel',
                 style: TextStyle(
-                  color: AppColors.mutedText,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
