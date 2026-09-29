@@ -32,19 +32,16 @@ class ShelfSpaceApp extends StatelessWidget {
               OrdersProvider(c.read<ProfileOrdersRepository>())..load(),
         ),
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'ShelfSpace',
-        theme: AppTheme.lightTheme,
-    return AnimatedBuilder(
-      animation: AppThemeController.instance,
-      builder: (context, _) => MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'ShelfSpace',
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: AppThemeController.instance.themeMode,
-        home: const SplashScreen(),
+      child: AnimatedBuilder(
+        animation: AppThemeController.instance,
+        builder: (context, _) => MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'ShelfSpace',
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: AppThemeController.instance.themeMode,
+          home: const SplashScreen(),
+        ),
       ),
     );
   }
