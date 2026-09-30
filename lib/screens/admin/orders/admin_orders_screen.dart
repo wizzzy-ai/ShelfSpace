@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/constants/app_colors.dart';
 import '../../../models/order.dart';
 import '../../../services/order_service.dart';
 
@@ -111,7 +110,11 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                                 ? 'Orders will appear here when customers check out.'
                                 : 'No orders match your search or filter.',
                             textAlign: TextAlign.center,
-                            style: const TextStyle(color: AppColors.mutedText),
+                            style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
                           ),
                         ),
                       )
@@ -138,12 +141,13 @@ class _AdminOrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -170,7 +174,7 @@ class _AdminOrderCard extends StatelessWidget {
           const SizedBox(height: 3),
           Text(
             '${order.items.fold<int>(0, (sum, item) => sum + item.quantity)} items · ${_date(order.createdAt)}',
-            style: const TextStyle(color: AppColors.mutedText, fontSize: 12),
+            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12),
           ),
           const SizedBox(height: 10),
           Row(
@@ -217,12 +221,16 @@ class _AdminOrderCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                _detail('Order ID', order.id),
-                _detail('Customer', order.customerName),
-                _detail('Phone', order.phone),
-                _detail('Delivery address', '${order.address}, ${order.city}'),
-                _detail('Payment method', order.paymentMethod),
-                _detail('Order date', _date(order.createdAt)),
+                _detail(context, 'Order ID', order.id),
+                _detail(context, 'Customer', order.customerName),
+                _detail(context, 'Phone', order.phone),
+                _detail(
+                  context,
+                  'Delivery address',
+                  '${order.address}, ${order.city}',
+                ),
+                _detail(context, 'Payment method', order.paymentMethod),
+                _detail(context, 'Order date', _date(order.createdAt)),
                 const Divider(height: 24),
                 const Text(
                   'Items',
@@ -244,9 +252,9 @@ class _AdminOrderCard extends StatelessWidget {
                     ),
                   ),
                 const Divider(height: 24),
-                _detail('Subtotal', _money(order.subtotal)),
-                _detail('Delivery fee', _money(order.deliveryFee)),
-                _detail('Total', _money(order.total), bold: true),
+                _detail(context, 'Subtotal', _money(order.subtotal)),
+                _detail(context, 'Delivery fee', _money(order.deliveryFee)),
+                _detail(context, 'Total', _money(order.total), bold: true),
               ],
             ),
           ),
@@ -261,7 +269,12 @@ class _AdminOrderCard extends StatelessWidget {
     );
   }
 
-  Widget _detail(String label, String value, {bool bold = false}) {
+  Widget _detail(
+    BuildContext context,
+    String label,
+    String value, {
+    bool bold = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 7),
       child: Row(
@@ -271,7 +284,9 @@ class _AdminOrderCard extends StatelessWidget {
             width: 118,
             child: Text(
               label,
-              style: const TextStyle(color: AppColors.mutedText),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
           Expanded(

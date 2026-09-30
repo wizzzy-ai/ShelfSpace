@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../core/constants/app_colors.dart';
 import '../../models/book.dart';
 import '../../models/order.dart';
 import '../../services/admin_user_service.dart';
@@ -47,9 +46,11 @@ class AdminDashboardScreen extends StatelessWidget {
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
                     const SizedBox(height: 4),
-                    const Text(
+                    Text(
                       'Local admin workspace · demo data',
-                      style: TextStyle(color: AppColors.mutedText),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(height: 22),
                     _buildStats(
@@ -206,7 +207,9 @@ class AdminDashboardScreen extends StatelessWidget {
                 label: Text(action.label),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Theme.of(context).colorScheme.primary,
-                  side: const BorderSide(color: AppColors.border),
+                  side: BorderSide(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                  ),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 14,
@@ -248,15 +251,16 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return SizedBox(
       width: width,
       child: Container(
         constraints: const BoxConstraints(minHeight: 114),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: colorScheme.outlineVariant),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -273,7 +277,10 @@ class _StatCard extends StatelessWidget {
             ),
             Text(
               stat.label,
-              style: const TextStyle(color: AppColors.mutedText, fontSize: 12),
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
+                fontSize: 12,
+              ),
             ),
           ],
         ),
@@ -313,15 +320,19 @@ class _EmptyPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
-      child: Text(message, style: const TextStyle(color: AppColors.mutedText)),
+      child: Text(
+        message,
+        style: TextStyle(color: colorScheme.onSurfaceVariant),
+      ),
     );
   }
 }
@@ -334,18 +345,16 @@ class _RecentOrderRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return ListTile(
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-      tileColor: AppColors.white,
+      tileColor: colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: AppColors.border),
+        side: BorderSide(color: colorScheme.outlineVariant),
       ),
-      leading: const Icon(
-        Icons.receipt_long_outlined,
-        color: AppColors.burgundy,
-      ),
+      leading: Icon(Icons.receipt_long_outlined, color: colorScheme.primary),
       title: Text(order.id, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(order.customerName),
       trailing: Text(
@@ -364,15 +373,16 @@ class _LowStockRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return ListTile(
       onTap: onTap,
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-      tileColor: AppColors.white,
+      tileColor: colorScheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: AppColors.border),
+        side: BorderSide(color: colorScheme.outlineVariant),
       ),
-      leading: const Icon(Icons.warning_amber_rounded, color: AppColors.error),
+      leading: Icon(Icons.warning_amber_rounded, color: colorScheme.error),
       title: Text(book.title, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(
         book.stock == 0 ? 'Out of stock' : 'Only ${book.stock} left',
