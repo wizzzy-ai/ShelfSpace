@@ -40,4 +40,34 @@ class Order {
     required this.createdAt,
     this.status = 'Processing',
   });
+
+  Order copyWith({
+    String? id,
+    List<OrderItem>? items,
+    double? subtotal,
+    double? deliveryFee,
+    double? total,
+    String? customerName,
+    String? phone,
+    String? address,
+    String? city,
+    String? paymentMethod,
+    DateTime? createdAt,
+    String? status,
+  }) {
+    return Order(
+      id: id ?? this.id,
+      items: items ?? this.items,
+      subtotal: subtotal ?? this.subtotal,
+      deliveryFee: deliveryFee ?? this.deliveryFee,
+      total: total ?? this.total,
+      customerName: customerName ?? this.customerName,
+      phone: phone ?? this.phone,
+      address: address ?? this.address,
+      city: city ?? this.city,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      createdAt: createdAt ?? this.createdAt,
+      status: status ?? this.status,
+    );
+  }
 }

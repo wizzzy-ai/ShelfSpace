@@ -1,19 +1,25 @@
+import 'package:flutter/foundation.dart';
+
 import '../models/book.dart';
 
-class MockBookService {
+class MockBookService extends ChangeNotifier {
   MockBookService._();
 
-  static const List<Book> books = [
+  static final MockBookService instance = MockBookService._();
+
+  static List<Book> get books => List.unmodifiable(instance._books);
+
+  final List<Book> _books = [
     Book(
       id: '1',
       title: 'The Silent Patient',
       author: 'Alex Michaelides',
       genre: 'Thriller',
-      description:
-          'A psychological thriller about a woman whose refusal to speak after a shocking crime captures the attention of a determined therapist.',
+      description: 'A psychological thriller about a woman whose refusal to speak after a shocking crime captures the attention of a determined therapist.',
       coverUrl:
           'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=600',
       price: 8500,
+      stock: 12,
       rating: 4.7,
       reviewCount: 1240,
       isBestseller: true,
@@ -24,11 +30,11 @@ class MockBookService {
       title: 'Atomic Habits',
       author: 'James Clear',
       genre: 'Self Development',
-      description:
-          'A practical guide to building good habits, breaking bad ones, and making small changes that create remarkable results.',
+      description: 'A practical guide to building good habits, breaking bad ones, and making small changes that create remarkable results.',
       coverUrl:
           'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=600',
       price: 7200,
+      stock: 3,
       rating: 4.8,
       reviewCount: 2480,
       isBestseller: true,
@@ -38,11 +44,11 @@ class MockBookService {
       title: 'The Great Gatsby',
       author: 'F. Scott Fitzgerald',
       genre: 'Classic',
-      description:
-          'A classic American novel exploring ambition, love, wealth, and the American dream.',
+      description: 'A classic American novel exploring ambition, love, wealth, and the American dream.',
       coverUrl:
           'https://images.unsplash.com/photo-1511108690759-009324a90311?w=600',
       price: 5500,
+      stock: 8,
       rating: 4.5,
       reviewCount: 890,
       isBestseller: true,
@@ -52,11 +58,11 @@ class MockBookService {
       title: 'The Alchemist',
       author: 'Paulo Coelho',
       genre: 'Fiction',
-      description:
-          'A philosophical story about following your dreams and discovering your purpose.',
+      description: 'A philosophical story about following your dreams and discovering your purpose.',
       coverUrl:
           'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600',
       price: 6000,
+      stock: 2,
       rating: 4.7,
       reviewCount: 1760,
       isNewArrival: true,
@@ -66,14 +72,35 @@ class MockBookService {
       title: 'Ikigai',
       author: 'Héctor García',
       genre: 'Lifestyle',
-      description:
-          'A guide to discovering the Japanese concept of purpose and living a more meaningful life.',
+      description: 'A guide to discovering the Japanese concept of purpose and living a more meaningful life.',
       coverUrl:
           'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600',
       price: 6800,
+      stock: 4,
       rating: 4.6,
       reviewCount: 940,
       isNewArrival: true,
     ),
   ];
+
+  void addBook(Book book) {
+    _books.add(book);
+    notifyListeners();
+  }
+
+  void updateBook(Book book) {
+    final index = _books.indexWhere((item) => item.id == book.id);
+    if (index == -1) return;
+
+    _books[index] = book;
+    notifyListeners();
+  }
+
+  void deleteBook(String id) {
+    final index = _books.indexWhere((book) => book.id == id);
+    if (index == -1) return;
+
+    _books.removeAt(index);
+    notifyListeners();
+  }
 }

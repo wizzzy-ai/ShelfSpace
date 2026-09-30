@@ -63,6 +63,14 @@ class OrderService extends ChangeNotifier {
     return null;
   }
 
+  void updateOrderStatus(String id, String status) {
+    final index = _orders.indexWhere((order) => order.id == id);
+    if (index == -1) return;
+
+    _orders[index] = _orders[index].copyWith(status: status);
+    notifyListeners();
+  }
+
   void clearOrders() {
     _orders.clear();
     notifyListeners();
