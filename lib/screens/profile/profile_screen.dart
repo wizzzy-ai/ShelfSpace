@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../admin/admin_dashboard_screen.dart';
 import '../orders/orders_screen.dart';
 import 'about_shelfspace_screen.dart';
 import 'addresses_screen.dart';
@@ -45,24 +46,17 @@ class ProfileScreen extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const SettingsScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
               );
             },
-            icon: const Icon(
-              Icons.settings_outlined,
-              color: AppColors.dark,
-            ),
+            icon: const Icon(Icons.settings_outlined, color: AppColors.dark),
           ),
           const SizedBox(width: 8),
         ],
       ),
       body: Center(
         child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: isDesktop ? 900 : 700,
-          ),
+          constraints: BoxConstraints(maxWidth: isDesktop ? 900 : 700),
           child: SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(
               isDesktop ? 32 : 20,
@@ -77,10 +71,7 @@ class ProfileScreen extends StatelessWidget {
 
                 const SizedBox(height: 28),
 
-                _buildSectionTitle(
-                  context,
-                  'My Account',
-                ),
+                _buildSectionTitle(context, 'My Account'),
 
                 const SizedBox(height: 12),
 
@@ -88,13 +79,27 @@ class ProfileScreen extends StatelessWidget {
                   context,
                   icon: Icons.receipt_long_outlined,
                   title: 'My Orders',
-                  subtitle:
-                      'View your order history and order details',
+                  subtitle: 'View your order history and order details',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const OrdersScreen()),
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 10),
+
+                _buildMenuCard(
+                  context,
+                  icon: Icons.dashboard_outlined,
+                  title: 'Admin Panel',
+                  subtitle: 'Manage books, orders, and customers',
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const OrdersScreen(),
+                        builder: (_) => const AdminDashboardScreen(),
                       ),
                     );
                   },
@@ -124,14 +129,12 @@ class ProfileScreen extends StatelessWidget {
                   context,
                   icon: Icons.location_on_outlined,
                   title: 'Saved Addresses',
-                  subtitle:
-                      'Manage your delivery addresses',
+                  subtitle: 'Manage your delivery addresses',
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) =>
-                            const AddressesScreen(),
+                        builder: (_) => const AddressesScreen(),
                       ),
                     );
                   },
@@ -143,14 +146,12 @@ class ProfileScreen extends StatelessWidget {
                   context,
                   icon: Icons.credit_card_outlined,
                   title: 'Payment Methods',
-                  subtitle:
-                      'Manage your payment options',
+                  subtitle: 'Manage your payment options',
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) =>
-                            const PaymentMethodsScreen(),
+                        builder: (_) => const PaymentMethodsScreen(),
                       ),
                     );
                   },
@@ -158,10 +159,7 @@ class ProfileScreen extends StatelessWidget {
 
                 const SizedBox(height: 28),
 
-                _buildSectionTitle(
-                  context,
-                  'Preferences',
-                ),
+                _buildSectionTitle(context, 'Preferences'),
 
                 const SizedBox(height: 12),
 
@@ -169,8 +167,7 @@ class ProfileScreen extends StatelessWidget {
                   context,
                   icon: Icons.notifications_none_rounded,
                   title: 'Notifications',
-                  subtitle:
-                      'Manage your notification preferences',
+                  subtitle: 'Manage your notification preferences',
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -188,25 +185,18 @@ class ProfileScreen extends StatelessWidget {
                   context,
                   icon: Icons.settings_outlined,
                   title: 'Settings',
-                  subtitle:
-                      'Manage your app preferences',
+                  subtitle: 'Manage your app preferences',
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            const SettingsScreen(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const SettingsScreen()),
                     );
                   },
                 ),
 
                 const SizedBox(height: 28),
 
-                _buildSectionTitle(
-                  context,
-                  'Support',
-                ),
+                _buildSectionTitle(context, 'Support'),
 
                 const SizedBox(height: 12),
 
@@ -214,14 +204,12 @@ class ProfileScreen extends StatelessWidget {
                   context,
                   icon: Icons.help_outline_rounded,
                   title: 'Help & Support',
-                  subtitle:
-                      'Get help with your ShelfSpace account',
+                  subtitle: 'Get help with your ShelfSpace account',
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) =>
-                            const HelpSupportScreen(),
+                        builder: (_) => const HelpSupportScreen(),
                       ),
                     );
                   },
@@ -233,14 +221,12 @@ class ProfileScreen extends StatelessWidget {
                   context,
                   icon: Icons.info_outline_rounded,
                   title: 'About ShelfSpace',
-                  subtitle:
-                      'Learn more about ShelfSpace',
+                  subtitle: 'Learn more about ShelfSpace',
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) =>
-                            const AboutShelfSpaceScreen(),
+                        builder: (_) => const AboutShelfSpaceScreen(),
                       ),
                     );
                   },
@@ -255,20 +241,13 @@ class ProfileScreen extends StatelessWidget {
                     onPressed: () {
                       _showLogoutDialog(context);
                     },
-                    icon: const Icon(
-                      Icons.logout_rounded,
-                    ),
-                    label: const Text(
-                      'Sign Out',
-                    ),
+                    icon: const Icon(Icons.logout_rounded),
+                    label: const Text('Sign Out'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.error,
-                      side: const BorderSide(
-                        color: AppColors.error,
-                      ),
+                      side: const BorderSide(color: AppColors.error),
                       shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(14),
                       ),
                     ),
                   ),
@@ -287,15 +266,11 @@ class ProfileScreen extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(
-        isDesktop ? 26 : 20,
-      ),
+      padding: EdgeInsets.all(isDesktop ? 26 : 20),
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.border,
-        ),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
@@ -319,25 +294,17 @@ class ProfileScreen extends StatelessWidget {
           const SizedBox(width: 16),
           Expanded(
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'ShelfSpace User',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleLarge
-                      ?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: Theme.of(context).textTheme.titleLarge
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 5),
                 const Text(
                   'user@example.com',
-                  style: TextStyle(
-                    color: AppColors.mutedText,
-                    fontSize: 13,
-                  ),
+                  style: TextStyle(color: AppColors.mutedText, fontSize: 13),
                 ),
                 const SizedBox(height: 10),
                 TextButton(
@@ -345,16 +312,14 @@ class ProfileScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) =>
-                            const EditProfileScreen(),
+                        builder: (_) => const EditProfileScreen(),
                       ),
                     );
                   },
                   style: TextButton.styleFrom(
                     padding: EdgeInsets.zero,
                     minimumSize: Size.zero,
-                    tapTargetSize:
-                        MaterialTapTargetSize.shrinkWrap,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   child: const Text(
                     'Edit Profile',
@@ -372,18 +337,11 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionTitle(
-    BuildContext context,
-    String title,
-  ) {
+  Widget _buildSectionTitle(BuildContext context, String title) {
     return Text(
       title,
-      style: Theme.of(context)
-          .textTheme
-          .titleLarge
-          ?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+      style: Theme.of(context).textTheme.titleLarge
+          ?.copyWith(fontWeight: FontWeight.bold),
     );
   }
 
@@ -404,9 +362,7 @@ class ProfileScreen extends StatelessWidget {
           padding: const EdgeInsets.all(15),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: AppColors.border,
-            ),
+            border: Border.all(color: AppColors.border),
           ),
           child: Row(
             children: [
@@ -414,23 +370,15 @@ class ProfileScreen extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.burgundy.withValues(
-                    alpha: 0.08,
-                  ),
-                  borderRadius:
-                      BorderRadius.circular(12),
+                  color: AppColors.burgundy.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  icon,
-                  color: AppColors.burgundy,
-                  size: 22,
-                ),
+                child: Icon(icon, color: AppColors.burgundy, size: 22),
               ),
               const SizedBox(width: 13),
               Expanded(
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
@@ -479,9 +427,7 @@ class ProfileScreen extends StatelessWidget {
               },
               child: const Text(
                 'Cancel',
-                style: TextStyle(
-                  color: AppColors.mutedText,
-                ),
+                style: TextStyle(color: AppColors.mutedText),
               ),
             ),
             ElevatedButton(
