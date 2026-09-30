@@ -144,7 +144,7 @@ class _AdminBooksScreenState extends State<AdminBooksScreen> {
                           100,
                         ),
                         itemCount: books.length,
-                        separatorBuilder: (_, __) =>
+                        separatorBuilder: (_, _) =>
                             const SizedBox(height: 10),
                         itemBuilder: (context, index) {
                           final book = books[index];
@@ -242,7 +242,7 @@ class _BookAdminRow extends StatelessWidget {
               width: 58,
               height: 78,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
+              errorBuilder: (_, _, _) => Container(
                 width: 58,
                 height: 78,
                 color: AppColors.border,
