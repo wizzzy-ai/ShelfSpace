@@ -49,7 +49,6 @@ class ProfileScreen extends StatelessWidget {
                 MaterialPageRoute(builder: (_) => const SettingsScreen()),
               );
             },
-            icon: const Icon(Icons.settings_outlined, color: AppColors.dark),
             icon: Icon(
               Icons.settings_outlined,
               color: Theme.of(context).colorScheme.onSurface,
@@ -274,7 +273,6 @@ class ProfileScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
         border: Border.all(
           color: Theme.of(context).colorScheme.outlineVariant,
         ),
@@ -311,7 +309,6 @@ class ProfileScreen extends StatelessWidget {
                 const SizedBox(height: 5),
                 Text(
                   'user@example.com',
-                  style: TextStyle(color: AppColors.mutedText, fontSize: 13),
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 13,
@@ -373,7 +370,6 @@ class ProfileScreen extends StatelessWidget {
           padding: const EdgeInsets.all(15),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border),
             border: Border.all(
               color: Theme.of(context).colorScheme.outlineVariant,
             ),
@@ -441,7 +437,6 @@ class ProfileScreen extends StatelessWidget {
               },
               child: Text(
                 'Cancel',
-                style: TextStyle(color: AppColors.mutedText),
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
