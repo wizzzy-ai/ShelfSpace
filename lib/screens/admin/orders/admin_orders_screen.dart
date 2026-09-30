@@ -121,7 +121,7 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
                     : ListView.separated(
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                         itemCount: orders.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        separatorBuilder: (_, _) => const SizedBox(height: 10),
                         itemBuilder: (context, index) =>
                             _AdminOrderCard(order: orders[index]),
                       ),

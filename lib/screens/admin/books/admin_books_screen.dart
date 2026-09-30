@@ -131,6 +131,8 @@ class _AdminBooksScreenState extends State<AdminBooksScreen> {
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
                         itemCount: books.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        separatorBuilder: (_, _) =>
+                            const SizedBox(height: 10),
                         itemBuilder: (context, index) {
                           final book = books[index];
 
@@ -228,7 +230,7 @@ class _BookAdminRow extends StatelessWidget {
               width: 58,
               height: 78,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
+              errorBuilder: (_, _, _) => Container(
                 width: 58,
                 height: 78,
                 color: colorScheme.surfaceContainerHighest,
