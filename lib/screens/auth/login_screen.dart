@@ -40,7 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(28, 36, 28, 28),
@@ -67,7 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Text(
                 'Welcome back.',
                 style: GoogleFonts.playfairDisplay(
-                  color: AppColors.dark,
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 34,
                   fontWeight: FontWeight.bold,
                 ),
@@ -78,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Text(
                 'Sign in to continue your reading journey.',
                 style: GoogleFonts.inter(
-                  color: AppColors.mutedText,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   fontSize: 15,
                 ),
               ),
@@ -89,7 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Text(
                 'Email address',
                 style: GoogleFonts.inter(
-                  color: AppColors.dark,
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
@@ -112,7 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Text(
                 'Password',
                 style: GoogleFonts.inter(
-                  color: AppColors.dark,
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
@@ -165,7 +165,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Text(
                     'Remember me',
                     style: GoogleFonts.inter(
-                      color: AppColors.mutedText,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontSize: 13,
                     ),
                   ),
@@ -211,22 +211,22 @@ class _LoginScreenState extends State<LoginScreen> {
               // Divider
               Row(
                 children: [
-                  const Expanded(
-                    child: Divider(color: AppColors.border),
+                  Expanded(
+                    child: Divider(color: Theme.of(context).colorScheme.outlineVariant),
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 14),
                     child: Text(
                       'OR',
                       style: GoogleFonts.inter(
-                        color: AppColors.mutedText,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
-                  const Expanded(
-                    child: Divider(color: AppColors.border),
+                  Expanded(
+                    child: Divider(color: Theme.of(context).colorScheme.outlineVariant),
                   ),
                 ],
               ),
@@ -247,21 +247,21 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     );
                   },
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.g_mobiledata_rounded,
                     size: 28,
-                    color: AppColors.dark,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                   label: Text(
                     'Continue with Google',
                     style: GoogleFonts.inter(
-                      color: AppColors.dark,
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(
-                      color: AppColors.border,
+                    side: BorderSide(
+                      color: Theme.of(context).colorScheme.outlineVariant,
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
@@ -279,7 +279,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Text(
                     "Don't have an account?",
                     style: GoogleFonts.inter(
-                      color: AppColors.mutedText,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontSize: 14,
                     ),
                   ),

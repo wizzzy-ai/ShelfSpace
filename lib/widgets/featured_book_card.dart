@@ -110,14 +110,14 @@ class FeaturedBookCard extends StatelessWidget {
                           width: imageWidth,
                           height: imageHeight,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) {
+                          errorBuilder: (_, _, _) {
                             return Container(
                               width: imageWidth,
                               height: imageHeight,
-                              color: AppColors.border,
-                              child: const Icon(
+                              color: Theme.of(context).colorScheme.outlineVariant,
+                              child: Icon(
                                 Icons.menu_book_rounded,
-                                color: AppColors.mutedText,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
                                 size: 32,
                               ),
                             );
@@ -176,14 +176,14 @@ class FeaturedBookCard extends StatelessWidget {
                   width: 76,
                   height: 112,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) {
+                  errorBuilder: (_, _, _) {
                     return Container(
                       width: 76,
                       height: 112,
-                      color: AppColors.border,
-                      child: const Icon(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                      child: Icon(
                         Icons.menu_book_rounded,
-                        color: AppColors.mutedText,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         size: 28,
                       ),
                     );
@@ -295,7 +295,7 @@ class FeaturedBookCard extends StatelessWidget {
           child: TextButton(
             onPressed: onTap,
             style: TextButton.styleFrom(
-              backgroundColor: AppColors.white,
+              backgroundColor: Theme.of(context).colorScheme.surface,
               foregroundColor: AppColors.burgundy,
               padding: const EdgeInsets.symmetric(
                 horizontal: 9,

@@ -10,10 +10,10 @@ class OrdersScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('My Orders'),
-        backgroundColor: AppColors.cream,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
       ),
       body: AnimatedBuilder(
@@ -33,7 +33,7 @@ class OrdersScreen extends StatelessWidget {
               28,
             ),
             itemCount: orders.length,
-            separatorBuilder: (_, __) =>
+            separatorBuilder: (_, _) =>
                 const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final order = orders[index];
@@ -61,7 +61,7 @@ class OrdersScreen extends StatelessWidget {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       builder: (sheetContext) {
         return SafeArea(
           child: FractionallySizedBox(
@@ -93,7 +93,7 @@ class _OrderCard extends StatelessWidget {
     );
 
     return Material(
-      color: AppColors.white,
+      color: Theme.of(context).colorScheme.surface,
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         onTap: onTap,
@@ -103,7 +103,7 @@ class _OrderCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: AppColors.border,
+              color: Theme.of(context).colorScheme.outlineVariant,
             ),
           ),
           child: Column(
@@ -141,8 +141,8 @@ class _OrderCard extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           _formatDate(order.createdAt),
-                          style: const TextStyle(
-                            color: AppColors.mutedText,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                             fontSize: 11,
                           ),
                         ),
@@ -157,8 +157,8 @@ class _OrderCard extends StatelessWidget {
 
               const SizedBox(height: 15),
 
-              const Divider(
-                color: AppColors.border,
+              Divider(
+                color: Theme.of(context).colorScheme.outlineVariant,
                 height: 1,
               ),
 
@@ -168,8 +168,8 @@ class _OrderCard extends StatelessWidget {
                 children: [
                   Text(
                     '$itemCount ${itemCount == 1 ? 'item' : 'items'}',
-                    style: const TextStyle(
-                      color: AppColors.mutedText,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontSize: 12,
                     ),
                   ),
@@ -183,9 +183,9 @@ class _OrderCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 7),
-                  const Icon(
+                  Icon(
                     Icons.chevron_right_rounded,
-                    color: AppColors.mutedText,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     size: 20,
                   ),
                 ],
@@ -216,7 +216,7 @@ class _OrderDetailsSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.cream,
+      color: Theme.of(context).colorScheme.surface,
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
           20,
@@ -232,7 +232,7 @@ class _OrderDetailsSheet extends StatelessWidget {
                 width: 45,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.border,
+                  color: Theme.of(context).colorScheme.outlineVariant,
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -263,15 +263,15 @@ class _OrderDetailsSheet extends StatelessWidget {
 
             Text(
               order.id,
-              style: const TextStyle(
-                color: AppColors.mutedText,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 12,
               ),
             ),
 
             const SizedBox(height: 20),
 
-            _buildTrackingCard(),
+            _buildTrackingCard(context),
 
             const SizedBox(height: 20),
 
@@ -288,10 +288,10 @@ class _OrderDetailsSheet extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(15),
               decoration: BoxDecoration(
-                color: AppColors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: AppColors.border,
+                  color: Theme.of(context).colorScheme.outlineVariant,
                 ),
               ),
               child: Column(
@@ -314,16 +314,16 @@ class _OrderDetailsSheet extends StatelessWidget {
                               height: 70,
                               fit: BoxFit.cover,
                               errorBuilder:
-                                  (_, __, ___) {
+                                  (_, _, _) {
                                 return Container(
                                   width: 54,
                                   height: 70,
-                                  color: AppColors.border,
-                                  child: const Icon(
+                                  color: Theme.of(context).colorScheme.outlineVariant,
+                                  child: Icon(
                                     Icons
                                         .menu_book_rounded,
                                     color:
-                                        AppColors.mutedText,
+                                        Theme.of(context).colorScheme.onSurfaceVariant,
                                   ),
                                 );
                               },
@@ -349,9 +349,9 @@ class _OrderDetailsSheet extends StatelessWidget {
                                 const SizedBox(height: 5),
                                 Text(
                                   'Qty: ${item.quantity}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     color:
-                                        AppColors.mutedText,
+                                        Theme.of(context).colorScheme.onSurfaceVariant,
                                     fontSize: 11,
                                   ),
                                 ),
@@ -390,10 +390,10 @@ class _OrderDetailsSheet extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: AppColors.border,
+                  color: Theme.of(context).colorScheme.outlineVariant,
                 ),
               ),
               child: Column(
@@ -435,10 +435,10 @@ class _OrderDetailsSheet extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: AppColors.border,
+                  color: Theme.of(context).colorScheme.outlineVariant,
                 ),
               ),
               child: Column(
@@ -454,12 +454,12 @@ class _OrderDetailsSheet extends StatelessWidget {
                     value:
                         '₦${order.deliveryFee.toStringAsFixed(0)}',
                   ),
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.symmetric(
                       vertical: 12,
                     ),
                     child: Divider(
-                      color: AppColors.border,
+                      color: Theme.of(context).colorScheme.outlineVariant,
                     ),
                   ),
                   _SummaryRow(
@@ -490,7 +490,7 @@ class _OrderDetailsSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildTrackingCard() {
+  Widget _buildTrackingCard(BuildContext context) {
     final steps = [
       'Processing',
       'Shipped',
@@ -503,10 +503,10 @@ class _OrderDetailsSheet extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.border,
+          color: Theme.of(context).colorScheme.outlineVariant,
         ),
       ),
       child: Column(
@@ -541,7 +541,7 @@ class _OrderDetailsSheet extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: isCompleted
                               ? AppColors.burgundy
-                              : AppColors.border,
+                              : Theme.of(context).colorScheme.outlineVariant,
                           shape: BoxShape.circle,
                         ),
                         child: isCompleted
@@ -559,7 +559,7 @@ class _OrderDetailsSheet extends StatelessWidget {
                           height: 30,
                           color: index < currentIndex
                               ? AppColors.burgundy
-                              : AppColors.border,
+                              : Theme.of(context).colorScheme.outlineVariant,
                         ),
                     ],
                   ),
@@ -571,8 +571,8 @@ class _OrderDetailsSheet extends StatelessWidget {
                       steps[index],
                       style: TextStyle(
                         color: isCompleted
-                            ? AppColors.dark
-                            : AppColors.mutedText,
+                            ? Theme.of(context).colorScheme.onSurface
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
                         fontWeight: isCompleted
                             ? FontWeight.w600
                             : FontWeight.normal,
@@ -617,8 +617,8 @@ class _InfoRow extends StatelessWidget {
                 width: 70,
                 child: Text(
                   label,
-                  style: const TextStyle(
-                    color: AppColors.mutedText,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 12,
                   ),
                 ),
@@ -638,8 +638,8 @@ class _InfoRow extends StatelessWidget {
           ),
         ),
         if (showDivider)
-          const Divider(
-            color: AppColors.border,
+          Divider(
+            color: Theme.of(context).colorScheme.outlineVariant,
             height: 1,
           ),
       ],
@@ -666,8 +666,8 @@ class _SummaryRow extends StatelessWidget {
           label,
           style: TextStyle(
             color: isTotal
-                ? AppColors.dark
-                : AppColors.mutedText,
+                ? Theme.of(context).colorScheme.onSurface
+                : Theme.of(context).colorScheme.onSurfaceVariant,
             fontSize: isTotal ? 16 : 13,
             fontWeight:
                 isTotal ? FontWeight.bold : FontWeight.normal,
@@ -679,7 +679,7 @@ class _SummaryRow extends StatelessWidget {
           style: TextStyle(
             color: isTotal
                 ? AppColors.burgundy
-                : AppColors.dark,
+                : Theme.of(context).colorScheme.onSurface,
             fontSize: isTotal ? 18 : 13,
             fontWeight: FontWeight.bold,
           ),
@@ -787,11 +787,11 @@ class _EmptyOrders extends StatelessWidget {
                   ),
             ),
             const SizedBox(height: 10),
-            const Text(
+            Text(
               'Your completed and active orders will appear here.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: AppColors.mutedText,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 height: 1.5,
                 fontSize: 13,
               ),

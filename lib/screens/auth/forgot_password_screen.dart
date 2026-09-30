@@ -43,9 +43,9 @@ class _ForgotPasswordScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.cream,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.pop(context),
@@ -76,7 +76,7 @@ class _ForgotPasswordScreenState
               Text(
                 'Forgot your password?',
                 style: GoogleFonts.playfairDisplay(
-                  color: AppColors.dark,
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
                 ),
@@ -87,7 +87,7 @@ class _ForgotPasswordScreenState
               Text(
                 'Enter your email address and we will send you instructions to reset your password.',
                 style: GoogleFonts.inter(
-                  color: AppColors.mutedText,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                   fontSize: 15,
                   height: 1.6,
                 ),
@@ -98,7 +98,7 @@ class _ForgotPasswordScreenState
               Text(
                 'Email address',
                 style: GoogleFonts.inter(
-                  color: AppColors.dark,
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),

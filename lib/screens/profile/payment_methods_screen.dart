@@ -23,7 +23,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
   void _showAddPaymentMethod() {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       builder: (sheetContext) {
         return SafeArea(
           child: Padding(
@@ -42,7 +42,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                     width: 45,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.border,
+                      color: Theme.of(context).colorScheme.outlineVariant,
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
@@ -133,7 +133,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       builder: (sheetContext) {
         return Padding(
           padding: EdgeInsets.only(
@@ -154,7 +154,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                       width: 45,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: AppColors.border,
+                        color: Theme.of(context).colorScheme.outlineVariant,
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
@@ -320,7 +320,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: AppColors.white,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           title: const Text('Remove payment method?'),
           content: const Text(
             'This payment method will be removed from your account.',
@@ -330,10 +330,10 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
               onPressed: () {
                 Navigator.pop(dialogContext);
               },
-              child: const Text(
+              child: Text(
                 'Cancel',
                 style: TextStyle(
-                  color: AppColors.mutedText,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
@@ -382,10 +382,10 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Payment Methods'),
-        backgroundColor: AppColors.cream,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
       ),
       body: _paymentMethods.isEmpty
@@ -398,7 +398,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
                 110,
               ),
               itemCount: _paymentMethods.length,
-              separatorBuilder: (_, __) =>
+              separatorBuilder: (_, _) =>
                   const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final method = _paymentMethods[index];
@@ -463,11 +463,11 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
               ),
             ),
             const SizedBox(height: 10),
-            const Text(
+            Text(
               'Add a payment method to make checkout faster.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: AppColors.mutedText,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 height: 1.5,
               ),
             ),
@@ -494,7 +494,7 @@ class _PaymentChoice extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.white,
+      color: Theme.of(context).colorScheme.surface,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         onTap: onTap,
@@ -504,7 +504,7 @@ class _PaymentChoice extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: AppColors.border,
+              color: Theme.of(context).colorScheme.outlineVariant,
             ),
           ),
           child: Row(
@@ -537,17 +537,17 @@ class _PaymentChoice extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
-                      style: const TextStyle(
-                        color: AppColors.mutedText,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 12,
                       ),
                     ),
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
-                color: AppColors.mutedText,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ],
           ),
@@ -581,12 +581,12 @@ class _PaymentMethodCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isDefault
               ? AppColors.burgundy
-              : AppColors.border,
+              : Theme.of(context).colorScheme.outlineVariant,
           width: isDefault ? 1.5 : 1,
         ),
       ),
@@ -623,8 +623,8 @@ class _PaymentMethodCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
-                      style: const TextStyle(
-                        color: AppColors.mutedText,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 12,
                       ),
                     ),

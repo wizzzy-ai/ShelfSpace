@@ -22,10 +22,10 @@ class BookDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.cream,
-        foregroundColor: AppColors.dark,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         titleSpacing: 0,
         centerTitle: false,
@@ -77,7 +77,7 @@ class BookDetailsScreen extends StatelessWidget {
                     size: 22,
                     color: isWishlisted
                         ? AppColors.burgundy
-                        : AppColors.dark,
+                        : Theme.of(context).colorScheme.onSurface,
                   ),
                 );
               },
@@ -210,13 +210,13 @@ class BookDetailsScreen extends StatelessWidget {
               width: width,
               height: height,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) {
+              errorBuilder: (_, _, _) {
                 return Container(
-                  color: AppColors.border,
-                  child: const Icon(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                  child: Icon(
                     Icons.menu_book_rounded,
                     size: 70,
-                    color: AppColors.mutedText,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 );
               },
@@ -267,7 +267,7 @@ class BookDetailsScreen extends StatelessWidget {
         Text(
           book.title,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: AppColors.dark,
+                color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.bold,
                 height: 1.1,
               ),
@@ -275,8 +275,8 @@ class BookDetailsScreen extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'by ${book.author}',
-          style: const TextStyle(
-            color: AppColors.mutedText,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
             fontSize: 15,
             fontWeight: FontWeight.w500,
           ),
@@ -292,17 +292,17 @@ class BookDetailsScreen extends StatelessWidget {
             const SizedBox(width: 5),
             Text(
               book.rating.toString(),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
-                color: AppColors.dark,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             const SizedBox(width: 8),
             Text(
               '${book.reviewCount} reviews',
-              style: const TextStyle(
-                color: AppColors.mutedText,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 13,
               ),
             ),
@@ -447,11 +447,12 @@ class BookDetailsScreen extends StatelessWidget {
 
   Widget _buildAboutSection(BuildContext context) {
     return _buildSectionCard(
+      context: context,
       title: 'About this book',
       child: Text(
         book.description,
-        style: const TextStyle(
-          color: AppColors.mutedText,
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
           fontSize: 14,
           height: 1.7,
         ),
@@ -461,21 +462,24 @@ class BookDetailsScreen extends StatelessWidget {
 
   Widget _buildBookInformation(BuildContext context) {
     return _buildSectionCard(
+      context: context,
       title: 'Book Information',
       child: Column(
         children: [
-          _infoRow('Title', book.title),
-          _infoDivider(),
-          _infoRow('Author', book.author),
-          _infoDivider(),
-          _infoRow('Genre', book.genre),
-          _infoDivider(),
+          _infoRow(context, 'Title', book.title),
+          _infoDivider(context),
+          _infoRow(context, 'Author', book.author),
+          _infoDivider(context),
+          _infoRow(context, 'Genre', book.genre),
+          _infoDivider(context),
           _infoRow(
+            context,
             'Rating',
             '${book.rating} / 5',
           ),
-          _infoDivider(),
+          _infoDivider(context),
           _infoRow(
+            context,
             'Reviews',
             '${book.reviewCount}',
           ),
@@ -486,6 +490,7 @@ class BookDetailsScreen extends StatelessWidget {
 
   Widget _buildReviewsPreview(BuildContext context) {
     return _buildSectionCard(
+      context: context,
       title: 'Customer Reviews',
       action: TextButton(
         onPressed: () {
@@ -511,10 +516,10 @@ class BookDetailsScreen extends StatelessWidget {
             children: [
               Text(
                 book.rating.toString(),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 34,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.dark,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const SizedBox(width: 10),
@@ -528,7 +533,7 @@ class BookDetailsScreen extends StatelessWidget {
                         Icons.star_rounded,
                         color: index < book.rating.round()
                             ? Colors.amber
-                            : AppColors.border,
+                            : Theme.of(context).colorScheme.outlineVariant,
                         size: 18,
                       ),
                     ),
@@ -536,8 +541,8 @@ class BookDetailsScreen extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     '${book.reviewCount} customer reviews',
-                    style: const TextStyle(
-                      color: AppColors.mutedText,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontSize: 12,
                     ),
                   ),
@@ -547,6 +552,7 @@ class BookDetailsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           _reviewPreview(
+            context: context,
             name: 'Daniel',
             date: '2 days ago',
             text:
@@ -555,6 +561,7 @@ class BookDetailsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           _reviewPreview(
+            context: context,
             name: 'Hannah',
             date: '1 week ago',
             text:
@@ -567,6 +574,7 @@ class BookDetailsScreen extends StatelessWidget {
   }
 
   Widget _reviewPreview({
+    required BuildContext context,
     required String name,
     required String date,
     required String text,
@@ -576,10 +584,10 @@ class BookDetailsScreen extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.cream,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.border,
+          color: Theme.of(context).colorScheme.outlineVariant,
         ),
       ),
       child: Column(
@@ -617,8 +625,8 @@ class BookDetailsScreen extends StatelessWidget {
                     ),
                     Text(
                       date,
-                      style: const TextStyle(
-                        color: AppColors.mutedText,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 11,
                       ),
                     ),
@@ -633,7 +641,7 @@ class BookDetailsScreen extends StatelessWidget {
                     size: 14,
                     color: index < rating
                         ? Colors.amber
-                        : AppColors.border,
+                        : Theme.of(context).colorScheme.outlineVariant,
                   ),
                 ),
               ),
@@ -642,8 +650,8 @@ class BookDetailsScreen extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             text,
-            style: const TextStyle(
-              color: AppColors.mutedText,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: 13,
               height: 1.5,
             ),
@@ -663,12 +671,12 @@ class BookDetailsScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
+        Padding(
           padding: EdgeInsets.symmetric(horizontal: 0),
           child: Text(
             'You May Also Like',
             style: TextStyle(
-              color: AppColors.dark,
+              color: Theme.of(context).colorScheme.onSurface,
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
@@ -680,7 +688,7 @@ class BookDetailsScreen extends StatelessWidget {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: books.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 14),
+            separatorBuilder: (_, _) => const SizedBox(width: 14),
             itemBuilder: (context, index) {
               final similarBook = books[index];
 
@@ -706,6 +714,7 @@ class BookDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildSectionCard({
+    required BuildContext context,
     required String title,
     required Widget child,
     Widget? action,
@@ -714,10 +723,10 @@ class BookDetailsScreen extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: AppColors.border,
+          color: Theme.of(context).colorScheme.outlineVariant,
         ),
         boxShadow: [
           BoxShadow(
@@ -735,14 +744,14 @@ class BookDetailsScreen extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
-                    color: AppColors.dark,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-              if (action != null) action,
+              ?action,
             ],
           ),
           const SizedBox(height: 14),
@@ -752,7 +761,7 @@ class BookDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _infoRow(String label, String value) {
+  Widget _infoRow(BuildContext context, String label, String value) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -760,8 +769,8 @@ class BookDetailsScreen extends StatelessWidget {
           width: 90,
           child: Text(
             label,
-            style: const TextStyle(
-              color: AppColors.mutedText,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: 13,
             ),
           ),
@@ -769,8 +778,8 @@ class BookDetailsScreen extends StatelessWidget {
         Expanded(
           child: Text(
             value,
-            style: const TextStyle(
-              color: AppColors.dark,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
@@ -780,12 +789,12 @@ class BookDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _infoDivider() {
-    return const Padding(
+  Widget _infoDivider(BuildContext context) {
+    return Padding(
       padding: EdgeInsets.symmetric(vertical: 12),
       child: Divider(
         height: 1,
-        color: AppColors.border,
+        color: Theme.of(context).colorScheme.outlineVariant,
       ),
     );
   }

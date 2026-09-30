@@ -65,10 +65,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final page = _pages[_currentPage];
-
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -82,7 +80,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   child: Text(
                     'Skip',
                     style: GoogleFonts.inter(
-                      color: AppColors.mutedText,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
@@ -104,53 +102,65 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 itemBuilder: (context, index) {
                   final item = _pages[index];
 
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Illustration
-                        Container(
-                          width: 210,
-                          height: 210,
-                          decoration: BoxDecoration(
-                            color: AppColors.burgundy,
-                            borderRadius: BorderRadius.circular(60),
-                          ),
-                          child: Icon(
-                            item.icon,
-                            size: 95,
-                            color: AppColors.cream,
+                  return LayoutBuilder(
+                    builder: (context, constraints) => SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 28),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Illustration
+                              Container(
+                                width: 210,
+                                height: 210,
+                                decoration: BoxDecoration(
+                                  color: AppColors.burgundy,
+                                  borderRadius: BorderRadius.circular(60),
+                                ),
+                                child: Icon(
+                                  item.icon,
+                                  size: 95,
+                                  color: AppColors.cream,
+                                ),
+                              ),
+
+                              const SizedBox(height: 55),
+
+                              // Title
+                              Text(
+                                item.title,
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.playfairDisplay(
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                  fontSize: 31,
+                                  height: 1.15,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+
+                              const SizedBox(height: 18),
+
+                              // Description
+                              Text(
+                                item.description,
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.inter(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                  fontSize: 15,
+                                  height: 1.6,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-
-                        const SizedBox(height: 55),
-
-                        // Title
-                        Text(
-                          item.title,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.playfairDisplay(
-                            color: AppColors.dark,
-                            fontSize: 31,
-                            height: 1.15,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-
-                        const SizedBox(height: 18),
-
-                        // Description
-                        Text(
-                          item.description,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(
-                            color: AppColors.mutedText,
-                            fontSize: 15,
-                            height: 1.6,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   );
                 },
@@ -178,7 +188,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           decoration: BoxDecoration(
                             color: isActive
                                 ? AppColors.burgundy
-                                : AppColors.border,
+                                : Theme.of(context).colorScheme.outlineVariant,
                             borderRadius: BorderRadius.circular(20),
                           ),
                         );

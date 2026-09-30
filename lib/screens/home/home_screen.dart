@@ -52,7 +52,7 @@ class HomeScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -72,7 +72,7 @@ class HomeScreen extends StatelessWidget {
                                 .textTheme
                                 .bodyMedium
                                 ?.copyWith(
-                                  color: AppColors.mutedText,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                                   fontWeight: FontWeight.w500,
                                 ),
                           ),
@@ -166,7 +166,7 @@ class HomeScreen extends StatelessWidget {
                     ),
                     scrollDirection: Axis.horizontal,
                     itemCount: categories.length,
-                    separatorBuilder: (_, __) {
+                    separatorBuilder: (_, _) {
                       return const SizedBox(width: 10);
                     },
                     itemBuilder: (context, index) {
@@ -213,7 +213,7 @@ class HomeScreen extends StatelessWidget {
                     ),
                     scrollDirection: Axis.horizontal,
                     itemCount: bestsellers.length,
-                    separatorBuilder: (_, __) {
+                    separatorBuilder: (_, _) {
                       return const SizedBox(width: 14);
                     },
                     itemBuilder: (context, index) {
@@ -266,7 +266,7 @@ class HomeScreen extends StatelessWidget {
                     ),
                     scrollDirection: Axis.horizontal,
                     itemCount: newArrivals.length,
-                    separatorBuilder: (_, __) {
+                    separatorBuilder: (_, _) {
                       return const SizedBox(width: 14);
                     },
                     itemBuilder: (context, index) {

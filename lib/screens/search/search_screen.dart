@@ -179,7 +179,7 @@ class _SearchScreenState extends State<SearchScreen> {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (context, setSheetState) {
@@ -201,7 +201,7 @@ class _SearchScreenState extends State<SearchScreen> {
                           width: 45,
                           height: 4,
                           decoration: BoxDecoration(
-                            color: AppColors.border,
+                            color: Theme.of(context).colorScheme.outlineVariant,
                             borderRadius:
                                 BorderRadius.circular(10),
                           ),
@@ -280,12 +280,12 @@ class _SearchScreenState extends State<SearchScreen> {
                             side: BorderSide(
                               color: selected
                                   ? AppColors.burgundy
-                                  : AppColors.border,
+                                  : Theme.of(context).colorScheme.outlineVariant,
                             ),
                             labelStyle: TextStyle(
                               color: selected
                                   ? AppColors.burgundy
-                                  : AppColors.dark,
+                                  : Theme.of(context).colorScheme.onSurface,
                               fontWeight: selected
                                   ? FontWeight.w600
                                   : FontWeight.normal,
@@ -316,7 +316,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         activeColor:
                             AppColors.burgundy,
                         inactiveColor:
-                            AppColors.border,
+                            Theme.of(context).colorScheme.outlineVariant,
                         onChanged: (value) {
                           setSheetState(() {
                             tempMaxPrice = value;
@@ -358,12 +358,12 @@ class _SearchScreenState extends State<SearchScreen> {
                             side: BorderSide(
                               color: selected
                                   ? AppColors.burgundy
-                                  : AppColors.border,
+                                  : Theme.of(context).colorScheme.outlineVariant,
                             ),
                             labelStyle: TextStyle(
                               color: selected
                                   ? AppColors.burgundy
-                                  : AppColors.dark,
+                                  : Theme.of(context).colorScheme.onSurface,
                             ),
                           );
                         }).toList(),
@@ -466,9 +466,9 @@ class _SearchScreenState extends State<SearchScreen> {
     final books = _filteredBooks;
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.cream,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         title: Row(
           children: [
@@ -476,7 +476,7 @@ class _SearchScreenState extends State<SearchScreen> {
               'assets/icons/app_icon.png',
               height: 32,
               width: 32,
-              errorBuilder: (_, __, ___) {
+              errorBuilder: (_, _, _) {
                 return const Icon(
                   Icons.menu_book_rounded,
                   size: 32,
@@ -644,9 +644,9 @@ class _SearchScreenState extends State<SearchScreen> {
         onSubmitted: _performSearch,
         decoration: InputDecoration(
           hintText: 'Search ShelfSpace books, authors, genres...',
-          prefixIcon: const Icon(
+          prefixIcon: Icon(
             Icons.search_rounded,
-            color: AppColors.mutedText,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           suffixIcon: _hasSearch
               ? IconButton(
@@ -703,9 +703,9 @@ class _SearchScreenState extends State<SearchScreen> {
                   color: AppColors.burgundy,
                 ),
                 label: Text(item),
-                backgroundColor: AppColors.white,
-                side: const BorderSide(
-                  color: AppColors.border,
+                backgroundColor: Theme.of(context).colorScheme.surface,
+                side: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant,
                 ),
                 labelStyle: const TextStyle(
                   fontSize: 12,
@@ -753,7 +753,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 bottom: 10,
               ),
               child: Material(
-                color: AppColors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius:
                     BorderRadius.circular(14),
                 child: InkWell(
@@ -769,7 +769,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       borderRadius:
                           BorderRadius.circular(14),
                       border: Border.all(
-                        color: AppColors.border,
+                        color: Theme.of(context).colorScheme.outlineVariant,
                       ),
                     ),
                     child: Row(
@@ -803,10 +803,10 @@ class _SearchScreenState extends State<SearchScreen> {
                             ),
                           ),
                         ),
-                        const Icon(
+                        Icon(
                           Icons.chevron_right_rounded,
                           color:
-                              AppColors.mutedText,
+                              Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ],
                     ),

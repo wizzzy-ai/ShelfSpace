@@ -21,12 +21,12 @@ class HelpSupportScreen extends StatelessWidget {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: AppColors.white,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           title: const Text('Contact Support'),
-          content: const Text(
+          content: Text(
             'Need help? Our support team will be available through email, phone, and in-app support.',
             style: TextStyle(
-              color: AppColors.mutedText,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               height: 1.5,
             ),
           ),
@@ -55,7 +55,7 @@ class HelpSupportScreen extends StatelessWidget {
   ) {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       builder: (sheetContext) {
         return SafeArea(
           child: Padding(
@@ -74,7 +74,7 @@ class HelpSupportScreen extends StatelessWidget {
                     width: 45,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.border,
+                      color: Theme.of(context).colorScheme.outlineVariant,
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
@@ -92,8 +92,8 @@ class HelpSupportScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   answer,
-                  style: const TextStyle(
-                    color: AppColors.mutedText,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     height: 1.6,
                   ),
                 ),
@@ -119,10 +119,10 @@ class HelpSupportScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cream,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Help & Support'),
-        backgroundColor: AppColors.cream,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
       ),
       body: ListView(
@@ -189,7 +189,7 @@ class HelpSupportScreen extends StatelessWidget {
                     ),
                     label: const Text('Contact Support'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.white,
+                      backgroundColor: Theme.of(context).colorScheme.surface,
                       foregroundColor: AppColors.burgundy,
                     ),
                   ),
@@ -329,10 +329,10 @@ class HelpSupportScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 5),
-                const Text(
+                Text(
                   'We are here to help.',
                   style: TextStyle(
-                    color: AppColors.mutedText,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 12,
                   ),
                 ),
@@ -340,7 +340,7 @@ class HelpSupportScreen extends StatelessWidget {
                 Text(
                   'Version 1.0.0',
                   style: TextStyle(
-                    color: AppColors.mutedText.withValues(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(
                       alpha: 0.8,
                     ),
                     fontSize: 11,
@@ -369,7 +369,7 @@ class _FaqCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.white,
+      color: Theme.of(context).colorScheme.surface,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
@@ -379,7 +379,7 @@ class _FaqCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: AppColors.border,
+              color: Theme.of(context).colorScheme.outlineVariant,
             ),
           ),
           child: Row(
@@ -408,9 +408,9 @@ class _FaqCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
-                color: AppColors.mutedText,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ],
           ),
@@ -436,7 +436,7 @@ class _SupportCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.white,
+      color: Theme.of(context).colorScheme.surface,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
@@ -446,7 +446,7 @@ class _SupportCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: AppColors.border,
+              color: Theme.of(context).colorScheme.outlineVariant,
             ),
           ),
           child: Row(
@@ -480,17 +480,17 @@ class _SupportCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
-                      style: const TextStyle(
-                        color: AppColors.mutedText,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 12,
                       ),
                     ),
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
-                color: AppColors.mutedText,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ],
           ),
