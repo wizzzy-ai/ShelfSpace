@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/constants/app_colors.dart';
 import '../../../services/admin_user_service.dart';
 
 class AdminUsersScreen extends StatefulWidget {
@@ -53,13 +52,18 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
                 margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.white,
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                  ),
                 ),
-                child: const Text(
+                child: Text(
                   'Local demo records only. Disable and delete actions are not linked to customer sign-in.',
-                  style: TextStyle(color: AppColors.mutedText, fontSize: 12),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 12,
+                  ),
                 ),
               ),
               Expanded(
@@ -97,12 +101,20 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _detail('Name', user.name),
-            _detail('Email', user.email),
-            _detail('Phone', user.phone),
-            _detail('Customer ID', user.id),
-            _detail('Joined', DateFormat('dd MMM yyyy').format(user.joinedAt)),
-            _detail('Status', user.isDisabled ? 'Disabled (local)' : 'Active'),
+            _detail(context, 'Name', user.name),
+            _detail(context, 'Email', user.email),
+            _detail(context, 'Phone', user.phone),
+            _detail(context, 'Customer ID', user.id),
+            _detail(
+              context,
+              'Joined',
+              DateFormat('dd MMM yyyy').format(user.joinedAt),
+            ),
+            _detail(
+              context,
+              'Status',
+              user.isDisabled ? 'Disabled (local)' : 'Active',
+            ),
           ],
         ),
         actions: [
@@ -115,7 +127,7 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
     );
   }
 
-  Widget _detail(String label, String value) {
+  Widget _detail(BuildContext context, String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -125,7 +137,9 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
             width: 95,
             child: Text(
               label,
-              style: const TextStyle(color: AppColors.mutedText),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
           Expanded(child: Text(value)),
@@ -171,8 +185,9 @@ class _UserRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Material(
-      color: AppColors.white,
+      color: colorScheme.surface,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         onTap: onOpen,
@@ -181,13 +196,13 @@ class _UserRow extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(14, 10, 4, 10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: colorScheme.outlineVariant),
           ),
           child: Row(
             children: [
               CircleAvatar(
-                backgroundColor: AppColors.burgundy.withValues(alpha: 0.08),
-                foregroundColor: AppColors.burgundy,
+                backgroundColor: colorScheme.primaryContainer,
+                foregroundColor: colorScheme.onPrimaryContainer,
                 child: Text(user.name.isEmpty ? '?' : user.name[0]),
               ),
               const SizedBox(width: 12),
@@ -206,8 +221,8 @@ class _UserRow extends StatelessWidget {
                       user.email,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.mutedText,
+                      style: TextStyle(
+                        color: colorScheme.onSurfaceVariant,
                         fontSize: 12,
                       ),
                     ),
@@ -216,9 +231,9 @@ class _UserRow extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               if (user.isDisabled)
-                const Text(
+                Text(
                   'Disabled',
-                  style: TextStyle(color: AppColors.error, fontSize: 11),
+                  style: TextStyle(color: colorScheme.error, fontSize: 11),
                 ),
               PopupMenuButton<String>(
                 tooltip: 'Customer actions',
