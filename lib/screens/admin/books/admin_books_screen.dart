@@ -13,6 +13,7 @@ class AdminBooksScreen extends StatefulWidget {
 
 class _AdminBooksScreenState extends State<AdminBooksScreen> {
   final TextEditingController _searchController = TextEditingController();
+
   String _selectedGenre = 'All genres';
 
   @override
@@ -35,7 +36,10 @@ class _AdminBooksScreenState extends State<AdminBooksScreen> {
         builder: (context, _) {
           final allBooks = MockBookService.books;
 
-          final genres = allBooks.map((book) => book.genre).toSet().toList()
+          final genres = allBooks
+              .map((book) => book.genre)
+              .toSet()
+              .toList()
             ..sort();
 
           final selectedGenre = genres.contains(_selectedGenre)
@@ -126,9 +130,12 @@ class _AdminBooksScreenState extends State<AdminBooksScreen> {
               ),
               Expanded(
                 child: books.isEmpty
-                    ? const Center(child: Text('No books match your search.'))
+                    ? const Center(
+                        child: Text('No books match your search.'),
+                      )
                     : ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                        padding:
+                            const EdgeInsets.fromLTRB(16, 8, 16, 100),
                         itemCount: books.length,
                         separatorBuilder: (_, _) =>
                             const SizedBox(height: 10),
@@ -206,6 +213,7 @@ class _BookAdminRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+
     final flags = [
       if (book.isBestseller) 'Bestseller',
       if (book.isNewArrival) 'New arrival',
@@ -279,7 +287,10 @@ class _BookAdminRow extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     flags.join(' · '),
-                    style: TextStyle(color: colorScheme.primary, fontSize: 11),
+                    style: TextStyle(
+                      color: colorScheme.primary,
+                      fontSize: 11,
+                    ),
                   ),
                 ],
               ],
@@ -287,10 +298,17 @@ class _BookAdminRow extends StatelessWidget {
           ),
           PopupMenuButton<String>(
             tooltip: 'Book actions',
-            onSelected: (action) => action == 'edit' ? onEdit() : onDelete(),
+            onSelected: (action) =>
+                action == 'edit' ? onEdit() : onDelete(),
             itemBuilder: (_) => const [
-              PopupMenuItem(value: 'edit', child: Text('Edit')),
-              PopupMenuItem(value: 'delete', child: Text('Delete')),
+              PopupMenuItem(
+                value: 'edit',
+                child: Text('Edit'),
+              ),
+              PopupMenuItem(
+                value: 'delete',
+                child: Text('Delete'),
+              ),
             ],
           ),
         ],
@@ -330,21 +348,17 @@ class _BookFormDialogState extends State<_BookFormDialog> {
     final book = widget.book;
 
     _titleController = TextEditingController(text: book?.title ?? '');
-
     _authorController = TextEditingController(text: book?.author ?? '');
-
     _genreController = TextEditingController(text: book?.genre ?? '');
-
     _descriptionController = TextEditingController(
       text: book?.description ?? '',
     );
-
-    _coverController = TextEditingController(text: book?.coverUrl ?? '');
-
+    _coverController = TextEditingController(
+      text: book?.coverUrl ?? '',
+    );
     _priceController = TextEditingController(
       text: book == null ? '' : book.price.toStringAsFixed(0),
     );
-
     _stockController = TextEditingController(
       text: book == null ? '0' : '${book.stock}',
     );
@@ -382,7 +396,11 @@ class _BookFormDialogState extends State<_BookFormDialog> {
                 _textField(_titleController, 'Title'),
                 _textField(_authorController, 'Author'),
                 _textField(_genreController, 'Genre'),
-                _textField(_descriptionController, 'Description', maxLines: 3),
+                _textField(
+                  _descriptionController,
+                  'Description',
+                  maxLines: 3,
+                ),
                 _textField(
                   _coverController,
                   'Cover image URL',
@@ -395,7 +413,8 @@ class _BookFormDialogState extends State<_BookFormDialog> {
                       child: _textField(
                         _priceController,
                         'Price (₦)',
-                        keyboardType: const TextInputType.numberWithOptions(
+                        keyboardType:
+                            const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
                         validator: _validatePrice,
@@ -452,7 +471,10 @@ class _BookFormDialogState extends State<_BookFormDialog> {
           onPressed: () => Navigator.pop(context),
           child: const Text('Cancel'),
         ),
-        ElevatedButton(onPressed: _save, child: const Text('Save book')),
+        ElevatedButton(
+          onPressed: _save,
+          child: const Text('Save book'),
+        ),
       ],
     );
   }
@@ -474,7 +496,9 @@ class _BookFormDialogState extends State<_BookFormDialog> {
         decoration: InputDecoration(labelText: label),
         validator:
             validator ??
-            (value) => required && (value == null || value.trim().isEmpty)
+            (value) =>
+                required &&
+                    (value == null || value.trim().isEmpty)
                 ? 'Required'
                 : null,
       ),
