@@ -130,7 +130,6 @@ class _AdminBooksScreenState extends State<AdminBooksScreen> {
                     : ListView.separated(
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
                         itemCount: books.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 10),
                         separatorBuilder: (_, _) =>
                             const SizedBox(height: 10),
                         itemBuilder: (context, index) {

@@ -22,6 +22,10 @@ This project is a Flutter application. To get started:
 3. Run `flutter pub get` to install dependencies
 4. Run `flutter run` to start the app
 
+## Backend
+
+The Express REST API, SQLite persistence, environment setup, endpoint reference, and production notes are in [backend/README.md](backend/README.md). The Flutter app currently uses mock data in several screens; connect those services to the API to use live accounts and store data.
+
 ## Tech Stack
 
 - Flutter
