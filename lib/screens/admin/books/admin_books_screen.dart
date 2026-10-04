@@ -138,7 +138,7 @@ class _AdminBooksScreenState extends State<AdminBooksScreen> {
                             SizedBox(
                               width: 200,
                               child: DropdownButtonFormField<String>(
-                                value: selectedGenre,
+                                initialValue: selectedGenre,
                                 decoration: const InputDecoration(
                                   contentPadding: EdgeInsets.symmetric(
                                     horizontal: 12,
@@ -170,7 +170,7 @@ class _AdminBooksScreenState extends State<AdminBooksScreen> {
                           search,
                           const SizedBox(height: 8),
                           DropdownButtonFormField<String>(
-                            value: selectedGenre,
+                            initialValue: selectedGenre,
                             decoration: const InputDecoration(
                               contentPadding: EdgeInsets.symmetric(
                                 horizontal: 12,

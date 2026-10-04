@@ -56,11 +56,13 @@ class _SearchScreenState extends State<SearchScreen> {
     });
     try {
       final books = await _bookService.fetchBooks();
+      if (!mounted) return;
       setState(() {
         _allBooks = books;
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
@@ -597,7 +599,12 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                 ),
               ),
-              if (books.isEmpty)
+              if (_isLoading && books.isEmpty)
+                const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (books.isEmpty)
                 const SliverFillRemaining(
                   hasScrollBody: false,
                   child: AppEmptyView(
