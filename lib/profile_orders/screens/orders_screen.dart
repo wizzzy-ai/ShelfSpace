@@ -7,8 +7,22 @@ import '../utils/formatters.dart';
 import '../widgets/order_status_chip.dart';
 import 'order_details_screen.dart';
 
-class OrdersScreen extends StatelessWidget {
+class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
+
+  @override
+  State<OrdersScreen> createState() => _OrdersScreenState();
+}
+
+class _OrdersScreenState extends State<OrdersScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Load orders when screen opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<OrdersProvider>().load();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -14,6 +14,15 @@ class _AdminUsersScreenState extends State<AdminUsersScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    // Load users from backend when screen opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AdminUserService.instance.load();
+    });
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();

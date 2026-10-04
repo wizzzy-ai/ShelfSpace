@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../models/book.dart';
-import '../../services/mock_book_service.dart';
+import '../../services/book_service.dart';
 import '../../widgets/app_state_view.dart';
 import '../../widgets/book_card.dart';
 import '../books/book_details_screen.dart';
@@ -16,6 +16,7 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final BookService _bookService = BookService();
 
   final List<String> _recentSearches = [
     'Atomic Habits',
@@ -34,14 +35,42 @@ class _SearchScreenState extends State<SearchScreen> {
   double _maxPrice = 10000;
   double _minRating = 0;
   String _sortBy = 'Popularity';
+  List<Book> _allBooks = [];
+  bool _isLoading = false;
 
   bool get _hasSearch =>
       _searchController.text.trim().isNotEmpty;
 
+  @override
+  void initState() {
+    super.initState();
+    _loadBooks();
+    _searchController.addListener(() {
+      setState(() {});
+    });
+  }
+
+  Future<void> _loadBooks() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final books = await _bookService.fetchBooks();
+      setState(() {
+        _allBooks = books;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   List<Book> get _filteredBooks {
     final query = _searchController.text.trim().toLowerCase();
 
-    List<Book> results = MockBookService.books.where((book) {
+    List<Book> results = _allBooks.where((book) {
       final matchesSearch = query.isEmpty ||
           book.title.toLowerCase().contains(query) ||
           book.author.toLowerCase().contains(query) ||
@@ -118,14 +147,6 @@ class _SearchScreenState extends State<SearchScreen> {
     }
 
     return count;
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _searchController.addListener(() {
-      setState(() {});
-    });
   }
 
   @override
@@ -450,7 +471,7 @@ class _SearchScreenState extends State<SearchScreen> {
       MaterialPageRoute(
         builder: (_) => BookDetailsScreen(
           book: book,
-          similarBooks: MockBookService.books
+          similarBooks: _allBooks
               .where(
                 (item) => item.id != book.id,
               )

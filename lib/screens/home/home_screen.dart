@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
-import '../../services/mock_book_service.dart';
+import '../../models/book.dart';
+import '../../services/book_service.dart';
 import '../../widgets/book_card.dart';
 import '../../widgets/category_card.dart';
 import '../../widgets/featured_book_banner.dart';
@@ -10,23 +11,56 @@ import '../../widgets/notification_bell.dart';
 import '../../widgets/section_header.dart';
 import '../books/book_details_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final books = MockBookService.books;
+  State<HomeScreen> createState() => _HomeScreenState();
+}
 
-    final featured = books.firstWhere(
+class _HomeScreenState extends State<HomeScreen> {
+  final BookService _bookService = BookService();
+  List<Book> _books = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBooks();
+  }
+
+  Future<void> _loadBooks() async {
+    try {
+      final books = await _bookService.fetchBooks();
+      setState(() {
+        _books = books;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final featured = _books.firstWhere(
       (book) => book.isFeatured,
-      orElse: () => books.first,
+      orElse: () => _books.first,
     );
 
     final bestsellers =
-        books.where((book) => book.isBestseller).toList();
+        _books.where((book) => book.isBestseller).toList();
 
     final newArrivals =
-        books.where((book) => book.isNewArrival).toList();
+        _books.where((book) => book.isNewArrival).toList();
 
     const categories = [
       {
@@ -102,7 +136,7 @@ class HomeScreen extends StatelessWidget {
                 child: TextField(
                   readOnly: true,
                   decoration: InputDecoration(
-                    hintText: 'Search ShelfSpace books, authors, genres...',
+                    hintText: 'Search ShelfSpace _books, authors, genres...',
                     prefixIcon: const Icon(
                       Icons.search_rounded,
                     ),
@@ -133,7 +167,7 @@ class HomeScreen extends StatelessWidget {
                     MaterialPageRoute(
                       builder: (_) => BookDetailsScreen(
                         book: featured,
-                        similarBooks: books
+                        similarBooks: _books
                             .where((book) => book.id != featured.id)
                             .take(3)
                             .toList(),
@@ -179,7 +213,7 @@ class HomeScreen extends StatelessWidget {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
-                                '${category['title']} books selected.',
+                                '${category['title']} _books selected.',
                               ),
                             ),
                           );
@@ -227,7 +261,7 @@ class HomeScreen extends StatelessWidget {
                             MaterialPageRoute(
                               builder: (_) => BookDetailsScreen(
                                 book: book,
-                                similarBooks: books
+                                similarBooks: _books
                                     .where(
                                       (item) => item.id != book.id,
                                     )
@@ -280,7 +314,7 @@ class HomeScreen extends StatelessWidget {
                             MaterialPageRoute(
                               builder: (_) => BookDetailsScreen(
                                 book: book,
-                                similarBooks: books
+                                similarBooks: _books
                                     .where(
                                       (item) => item.id != book.id,
                                     )

@@ -4,99 +4,131 @@ import 'package:intl/intl.dart';
 import '../../models/book.dart';
 import '../../models/order.dart';
 import '../../services/admin_user_service.dart';
-import '../../services/mock_book_service.dart';
+import '../../services/book_service.dart';
 import '../../services/order_service.dart';
 import 'books/admin_books_screen.dart';
 import 'orders/admin_orders_screen.dart';
 import 'users/admin_users_screen.dart';
 
-class AdminDashboardScreen extends StatelessWidget {
+class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
+
+  @override
+  State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
+}
+
+class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
+  final BookService _bookService = BookService();
+  List<Book> _books = [];
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBooks();
+  }
+
+  Future<void> _loadBooks() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final books = await _bookService.fetchBooks();
+      setState(() {
+        _books = books;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Admin Dashboard')),
-      body: AnimatedBuilder(
-        animation: Listenable.merge([
-          MockBookService.instance,
-          OrderService.instance,
-          AdminUserService.instance,
-        ]),
-        builder: (context, _) {
-          final books = MockBookService.books;
-          final orders = OrderService.instance.orders;
-          final users = AdminUserService.instance.users;
-          final lowStock = books.where((book) => book.stock < 5).toList();
-          final revenue = orders
-              .where((order) => order.status != 'Cancelled')
-              .fold<double>(0, (sum, order) => sum + order.total);
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : AnimatedBuilder(
+              animation: Listenable.merge([
+                OrderService.instance,
+                AdminUserService.instance,
+              ]),
+              builder: (context, _) {
+                final books = _books;
+                final orders = OrderService.instance.orders;
+                final users = AdminUserService.instance.users;
+                final lowStock = books.where((book) => book.stock < 5).toList();
+                final revenue = orders
+                    .where((order) => order.status != 'Cancelled')
+                    .fold<double>(0, (sum, order) => sum + order.total);
 
-          return LayoutBuilder(
-            builder: (context, constraints) {
-              final isWide = constraints.maxWidth >= 900;
-              final horizontalPadding = isWide ? 28.0 : 18.0;
-              final content = SingleChildScrollView(
-                padding: EdgeInsets.all(horizontalPadding),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Overview',
-                      style: Theme.of(context).textTheme.headlineMedium,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Local admin workspace · demo data',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 22),
-                    _buildStats(
-                      constraints.maxWidth - horizontalPadding * 2,
-                      books.length,
-                      users.length,
-                      orders.length,
-                      revenue,
-                    ),
-                    const SizedBox(height: 28),
-                    if (isWide)
-                      Row(
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isWide = constraints.maxWidth >= 900;
+                    final horizontalPadding = isWide ? 28.0 : 18.0;
+                    final content = SingleChildScrollView(
+                      padding: EdgeInsets.all(horizontalPadding),
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            flex: 3,
-                            child: _buildRecentOrders(context, orders),
+                          Text(
+                            'Overview',
+                            style: Theme.of(context).textTheme.headlineMedium,
                           ),
-                          const SizedBox(width: 20),
-                          Expanded(
-                            flex: 2,
-                            child: _buildLowStock(context, lowStock),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Local admin workspace · demo data',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
                           ),
+                          const SizedBox(height: 22),
+                          _buildStats(
+                            constraints.maxWidth - horizontalPadding * 2,
+                            books.length,
+                            users.length,
+                            orders.length,
+                            revenue,
+                          ),
+                          const SizedBox(height: 28),
+                          if (isWide)
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  flex: 3,
+                                  child: _buildRecentOrders(context, orders),
+                                ),
+                                const SizedBox(width: 20),
+                                Expanded(
+                                  flex: 2,
+                                  child: _buildLowStock(context, lowStock),
+                                ),
+                              ],
+                            )
+                          else ...[
+                            _buildRecentOrders(context, orders),
+                            const SizedBox(height: 24),
+                            _buildLowStock(context, lowStock),
+                          ],
+                          const SizedBox(height: 28),
+                          _buildQuickActions(context),
                         ],
-                      )
-                    else ...[
-                      _buildRecentOrders(context, orders),
-                      const SizedBox(height: 24),
-                      _buildLowStock(context, lowStock),
-                    ],
-                    const SizedBox(height: 28),
-                    _buildQuickActions(context),
-                  ],
-                ),
-              );
-
-              return Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1240),
-                  child: content,
-                ),
-              );
-            },
-          );
-        },
-      ),
+                      ),
+                    );
+                    return Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1240),
+                        child: content,
+                      ),
+                    );
+                  },
+                );
+              },
+          ),
     );
   }
 

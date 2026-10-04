@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../services/auth_service.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -11,15 +12,27 @@ class EditProfileScreen extends StatefulWidget {
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _authService = AuthService();
 
-  final _nameController =
-      TextEditingController(text: 'ShelfSpace User');
+  late final TextEditingController _nameController;
+  late final TextEditingController _emailController;
+  late final TextEditingController _phoneController;
+  bool _isSaving = false;
 
-  final _emailController =
-      TextEditingController(text: 'user@example.com');
-
-  final _phoneController =
-      TextEditingController(text: '');
+  @override
+  void initState() {
+    super.initState();
+    final user = _authService.currentUser;
+    _nameController = TextEditingController(
+      text: user?['name'] as String? ?? '',
+    );
+    _emailController = TextEditingController(
+      text: user?['email'] as String? ?? '',
+    );
+    _phoneController = TextEditingController(
+      text: user?['phone'] as String? ?? '',
+    );
+  }
 
   @override
   void dispose() {
@@ -29,17 +42,37 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
-  void _saveChanges() {
+  Future<void> _saveChanges() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Profile changes saved.',
+    setState(() {
+      _isSaving = true;
+    });
+
+    final result = await _authService.updateProfile(
+      name: _nameController.text.trim(),
+      phone: _phoneController.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _isSaving = false;
+    });
+
+    if (result['success'] != true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result['error'] as String? ?? 'Could not save profile.'),
         ),
-      ),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Profile changes saved.')),
     );
 
     Navigator.pop(context);
@@ -77,8 +110,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         shape: BoxShape.circle,
                       ),
                       alignment: Alignment.center,
-                      child: const Text(
-                        'B',
+                      child: Text(
+                        _nameController.text.isNotEmpty
+                            ? _nameController.text[0].toUpperCase()
+                            : 'U',
                         style: TextStyle(
                           color: AppColors.white,
                           fontSize: 38,
@@ -175,6 +210,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
               TextFormField(
                 controller: _emailController,
+                readOnly: true,
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
                 decoration: const InputDecoration(
@@ -261,10 +297,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 width: double.infinity,
                 height: 54,
                 child: ElevatedButton(
-                  onPressed: _saveChanges,
-                  child: const Text(
-                    'Save Changes',
-                  ),
+                  onPressed: _isSaving ? null : _saveChanges,
+                  child: _isSaving
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Save Changes'),
                 ),
               ),
             ],

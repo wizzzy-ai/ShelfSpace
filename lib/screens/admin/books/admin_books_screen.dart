@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../models/book.dart';
-import '../../../services/mock_book_service.dart';
+import '../../../services/book_service.dart';
 
 class AdminBooksScreen extends StatefulWidget {
   const AdminBooksScreen({super.key});
@@ -13,13 +13,85 @@ class AdminBooksScreen extends StatefulWidget {
 
 class _AdminBooksScreenState extends State<AdminBooksScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final BookService _bookService = BookService();
 
   String _selectedGenre = 'All genres';
+  List<Book> _books = [];
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBooks();
+  }
+
+  Future<void> _loadBooks() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final books = await _bookService.fetchBooks();
+      setState(() {
+        _books = books;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  Widget _buildBookList() {
+    final genres = _books
+        .map((book) => book.genre)
+        .toSet()
+        .toList()
+      ..sort();
+
+    final selectedGenre = genres.contains(_selectedGenre)
+        ? _selectedGenre
+        : 'All genres';
+
+    final query = _searchController.text.trim().toLowerCase();
+
+    final filteredBooks = _books.where((book) {
+      final matchesQuery =
+          query.isEmpty ||
+          book.title.toLowerCase().contains(query) ||
+          book.author.toLowerCase().contains(query) ||
+          book.genre.toLowerCase().contains(query);
+
+      final matchesGenre =
+          selectedGenre == 'All genres' || book.genre == selectedGenre;
+
+      return matchesQuery && matchesGenre;
+    }).toList();
+
+    if (filteredBooks.isEmpty) {
+      return const Center(child: Text('No books match your search.'));
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+      itemCount: filteredBooks.length,
+      separatorBuilder: (_, _) => const SizedBox(height: 10),
+      itemBuilder: (context, index) {
+        final book = filteredBooks[index];
+        return _BookAdminRow(
+          book: book,
+          onEdit: () => _editBook(context, book),
+          onDelete: () => _deleteBook(context, book),
+        );
+      },
+    );
   }
 
   @override
@@ -31,129 +103,105 @@ class _AdminBooksScreenState extends State<AdminBooksScreen> {
         icon: const Icon(Icons.add_rounded),
         label: const Text('Add book'),
       ),
-      body: AnimatedBuilder(
-        animation: MockBookService.instance,
-        builder: (context, _) {
-          final allBooks = MockBookService.books;
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final search = TextField(
+                        controller: _searchController,
+                        onChanged: (_) => setState(() {}),
+                        decoration: const InputDecoration(
+                          hintText: 'Search title, author, or genre',
+                          prefixIcon: Icon(Icons.search_rounded),
+                        ),
+                      );
 
-          final genres = allBooks
-              .map((book) => book.genre)
-              .toSet()
-              .toList()
-            ..sort();
+                      final genres = _books
+                          .map((book) => book.genre)
+                          .toSet()
+                          .toList()
+                        ..sort();
 
-          final selectedGenre = genres.contains(_selectedGenre)
-              ? _selectedGenre
-              : 'All genres';
+                      final selectedGenre = genres.contains(_selectedGenre)
+                          ? _selectedGenre
+                          : 'All genres';
 
-          final query = _searchController.text.trim().toLowerCase();
-
-          final books = allBooks.where((book) {
-            final matchesQuery =
-                query.isEmpty ||
-                book.title.toLowerCase().contains(query) ||
-                book.author.toLowerCase().contains(query) ||
-                book.genre.toLowerCase().contains(query);
-
-            final matchesGenre =
-                selectedGenre == 'All genres' || book.genre == selectedGenre;
-
-            return matchesQuery && matchesGenre;
-          }).toList();
-
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final search = TextField(
-                      controller: _searchController,
-                      onChanged: (_) => setState(() {}),
-                      decoration: const InputDecoration(
-                        hintText: 'Search title, author, or genre',
-                        prefixIcon: Icon(Icons.search_rounded),
-                      ),
-                    );
-
-                    final filter = DropdownButtonFormField<String>(
-                      initialValue: selectedGenre,
-                      isExpanded: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Genre',
-                        prefixIcon: Icon(Icons.filter_list_rounded),
-                      ),
-                      items: ['All genres', ...genres].map((genre) {
-                        return DropdownMenuItem<String>(
-                          value: genre,
-                          child: Text(
-                            genre,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (genre) {
-                        setState(() {
-                          _selectedGenre = genre ?? 'All genres';
-                        });
-                      },
-                    );
-
-                    if (constraints.maxWidth >= 600) {
-                      return Row(
-                        children: [
-                          Expanded(child: search),
-                          const SizedBox(width: 12),
-                          Flexible(
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(
-                                minWidth: 180,
-                                maxWidth: 220,
+                      if (constraints.maxWidth > 600) {
+                        return Row(
+                          children: [
+                            Expanded(child: search),
+                            const SizedBox(width: 12),
+                            SizedBox(
+                              width: 200,
+                              child: DropdownButtonFormField<String>(
+                                value: selectedGenre,
+                                decoration: const InputDecoration(
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                ),
+                                items: [
+                                  'All genres',
+                                  ...genres,
+                                ].map((genre) {
+                                  return DropdownMenuItem(
+                                    value: genre,
+                                    child: Text(genre),
+                                  );
+                                }).toList(),
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedGenre = value ?? 'All genres';
+                                  });
+                                },
                               ),
-                              child: filter,
                             ),
+                          ],
+                        );
+                      }
+
+                      return Column(
+                        children: [
+                          search,
+                          const SizedBox(height: 8),
+                          DropdownButtonFormField<String>(
+                            value: selectedGenre,
+                            decoration: const InputDecoration(
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                            ),
+                            items: [
+                              'All genres',
+                              ...genres,
+                            ].map((genre) {
+                              return DropdownMenuItem(
+                                value: genre,
+                                child: Text(genre),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedGenre = value ?? 'All genres';
+                              });
+                            },
                           ),
                         ],
                       );
-                    }
-
-                    return Column(
-                      children: [
-                        search,
-                        const SizedBox(height: 10),
-                        SizedBox(width: double.infinity, child: filter),
-                      ],
-                    );
-                  },
+                    },
+                  ),
                 ),
-              ),
-              Expanded(
-                child: books.isEmpty
-                    ? const Center(
-                        child: Text('No books match your search.'),
-                      )
-                    : ListView.separated(
-                        padding:
-                            const EdgeInsets.fromLTRB(16, 8, 16, 100),
-                        itemCount: books.length,
-                        separatorBuilder: (_, _) =>
-                            const SizedBox(height: 10),
-                        itemBuilder: (context, index) {
-                          final book = books[index];
-
-                          return _BookAdminRow(
-                            book: book,
-                            onEdit: () => _editBook(context, book),
-                            onDelete: () => _deleteBook(context, book),
-                          );
-                        },
-                      ),
-              ),
-            ],
-          );
-        },
-      ),
+                Expanded(
+                  child: _buildBookList(),
+                ),
+              ],
+            ),
     );
   }
 
@@ -165,13 +213,8 @@ class _AdminBooksScreenState extends State<AdminBooksScreen> {
 
     if (result == null) return;
 
-    final service = MockBookService.instance;
-
-    if (book == null) {
-      service.addBook(result);
-    } else {
-      service.updateBook(result);
-    }
+    // For now, just reload the list. TODO: Implement actual backend API calls
+    await _loadBooks();
   }
 
   Future<void> _deleteBook(BuildContext context, Book book) async {
@@ -194,7 +237,8 @@ class _AdminBooksScreenState extends State<AdminBooksScreen> {
     );
 
     if (confirmed == true) {
-      MockBookService.instance.deleteBook(book.id);
+      // TODO: Implement actual backend API call
+      await _loadBooks();
     }
   }
 }

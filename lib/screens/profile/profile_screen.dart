@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../services/auth_service.dart';
 import '../admin/admin_dashboard_screen.dart';
 import '../orders/orders_screen.dart';
 import 'about_shelfspace_screen.dart';
@@ -10,8 +11,15 @@ import 'help_support_screen.dart';
 import 'payment_methods_screen.dart';
 import 'settings_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final AuthService _authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
@@ -266,6 +274,11 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildProfileHeader(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final isDesktop = width >= 700;
+    final currentUser = _authService.currentUser;
+
+    final userName = currentUser?['name'] as String? ?? 'Reader';
+    final userEmail = currentUser?['email'] as String? ?? '';
+    final userInitial = userName.isNotEmpty ? userName[0].toUpperCase() : 'U';
 
     return Container(
       width: double.infinity,
@@ -288,7 +301,7 @@ class ProfileScreen extends StatelessWidget {
             ),
             alignment: Alignment.center,
             child: Text(
-              'B',
+              userInitial,
               style: TextStyle(
                 color: AppColors.white,
                 fontSize: isDesktop ? 34 : 30,
@@ -302,13 +315,13 @@ class ProfileScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'ShelfSpace User',
+                  userName,
                   style: Theme.of(context).textTheme.titleLarge
                       ?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  'user@example.com',
+                  userEmail,
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 13,
@@ -316,13 +329,16 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 TextButton(
-                  onPressed: () {
-                    Navigator.push(
+                  onPressed: () async {
+                    await Navigator.push<void>(
                       context,
                       MaterialPageRoute(
                         builder: (_) => const EditProfileScreen(),
                       ),
                     );
+                    if (mounted) {
+                      setState(() {});
+                    }
                   },
                   style: TextButton.styleFrom(
                     padding: EdgeInsets.zero,
@@ -445,13 +461,11 @@ class ProfileScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(dialogContext);
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Sign out will be connected to authentication.',
-                    ),
-                  ),
+                _authService.logout();
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/',
+                  (route) => false,
                 );
               },
               child: const Text('Sign Out'),
