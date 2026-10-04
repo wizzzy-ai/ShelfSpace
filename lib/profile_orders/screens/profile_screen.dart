@@ -7,8 +7,22 @@ import '../widgets/profile_avatar.dart';
 import 'edit_profile_screen.dart';
 import 'orders_screen.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Load profile when screen opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProfileProvider>().load();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

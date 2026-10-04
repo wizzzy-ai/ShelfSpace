@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'core/theme/app_theme.dart';
-import 'profile_orders/data/mock_profile_orders_repository.dart';
 import 'profile_orders/data/profile_orders_repository.dart';
+import 'profile_orders/data/profile_orders_repository_impl.dart';
 import 'profile_orders/providers/orders_provider.dart';
 import 'profile_orders/providers/profile_provider.dart';
 import 'core/theme/app_theme_controller.dart';
@@ -21,15 +21,15 @@ class ShelfSpaceApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         Provider<ProfileOrdersRepository>(
-          create: (_) => MockProfileOrdersRepository(),
+          create: (_) => ProfileOrdersRepositoryImpl(),
         ),
         ChangeNotifierProvider(
           create: (c) =>
-              ProfileProvider(c.read<ProfileOrdersRepository>())..load(),
+              ProfileProvider(c.read<ProfileOrdersRepository>()),
         ),
         ChangeNotifierProvider(
           create: (c) =>
-              OrdersProvider(c.read<ProfileOrdersRepository>())..load(),
+              OrdersProvider(c.read<ProfileOrdersRepository>()),
         ),
       ],
       child: AnimatedBuilder(

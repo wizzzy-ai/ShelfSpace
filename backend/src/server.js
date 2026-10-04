@@ -1,7 +1,7 @@
 require('dotenv').config();
-const { app, db, bcrypt } = require('./app');
+const createApp = require('./app');
 
-async function bootstrapAdmin() {
+async function bootstrapAdmin(db, bcrypt) {
  const email=process.env.ADMIN_EMAIL, password=process.env.ADMIN_PASSWORD;
  if (!email || !password) return;
  if (password.length < 12) throw new Error('ADMIN_PASSWORD must be at least 12 characters');
@@ -14,8 +14,11 @@ async function bootstrapAdmin() {
 }
 
 const port=Number(process.env.PORT||3000);
-bootstrapAdmin().then(()=>{
- const server=app.listen(port,'0.0.0.0',()=>console.log(`ShelfSpace API listening on port ${port}`));
- const shutdown=()=>server.close(()=>{db.close();process.exit(0);});
- process.on('SIGINT',shutdown);process.on('SIGTERM',shutdown);
-}).catch(error=>{console.error(error.message);process.exit(1);});
+
+createApp().then(({ app, db, bcrypt }) => {
+ bootstrapAdmin(db, bcrypt).then(()=>{
+  const server=app.listen(port,'0.0.0.0',()=>console.log(`ShelfSpace API listening on port ${port}`));
+  const shutdown=()=>server.close(()=>{process.exit(0);});
+  process.on('SIGINT',shutdown);process.on('SIGTERM',shutdown);
+ }).catch(error=>{console.error(error.message);process.exit(1);});
+}).catch(error=>{console.error('Failed to initialize app:',error);process.exit(1);});

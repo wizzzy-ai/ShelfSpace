@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../models/book.dart';
+import '../../services/book_service.dart';
 
 class ReviewsScreen extends StatefulWidget {
   final Book book;
@@ -16,32 +17,32 @@ class ReviewsScreen extends StatefulWidget {
 }
 
 class _ReviewsScreenState extends State<ReviewsScreen> {
-  final List<_MockReview> _reviews = [
-    const _MockReview(
-      name: 'James',
-      rating: 5,
-      text:
-          'A really enjoyable read. The story kept me interested from beginning to end.',
-      time: '2 days ago',
-      likes: 24,
-    ),
-    const _MockReview(
-      name: 'Sarah',
-      rating: 4,
-      text:
-          'Well written and worth reading. I would definitely recommend it.',
-      time: '1 week ago',
-      likes: 12,
-    ),
-    const _MockReview(
-      name: 'Michael',
-      rating: 5,
-      text:
-          'One of the best books I have read recently. Definitely worth the price.',
-      time: '2 weeks ago',
-      likes: 18,
-    ),
-  ];
+  final BookService _bookService = BookService();
+  List<Map<String, dynamic>> _reviews = [];
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadReviews();
+  }
+
+  Future<void> _loadReviews() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final reviews = await _bookService.fetchBookReviews(widget.book.id);
+      setState(() {
+        _reviews = reviews;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   void _showWriteReviewSheet() {
     int selectedRating = 0;
@@ -210,7 +211,11 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                 bottom: 12,
               ),
               child: _ReviewCard(
-                review: review,
+                name: review['customerName'] ?? 'Anonymous',
+                rating: review['rating'] ?? 0,
+                text: review['comment'] ?? '',
+                time: review['createdAt'] ?? '',
+                likes: 0,
               ),
             ),
           ),
@@ -349,10 +354,18 @@ class _RatingBar extends StatelessWidget {
 }
 
 class _ReviewCard extends StatefulWidget {
-  final _MockReview review;
+  final String name;
+  final int rating;
+  final String text;
+  final String time;
+  final int likes;
 
   const _ReviewCard({
-    required this.review,
+    required this.name,
+    required this.rating,
+    required this.text,
+    required this.time,
+    required this.likes,
   });
 
   @override
@@ -364,8 +377,7 @@ class _ReviewCardState extends State<_ReviewCard> {
 
   @override
   Widget build(BuildContext context) {
-    final likes =
-        widget.review.likes + (_liked ? 1 : 0);
+    final likes = widget.likes + (_liked ? 1 : 0);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -388,7 +400,7 @@ class _ReviewCardState extends State<_ReviewCard> {
                   alpha: 0.10,
                 ),
                 child: Text(
-                  widget.review.name[0],
+                  widget.name[0],
                   style: const TextStyle(
                     color: AppColors.burgundy,
                     fontWeight: FontWeight.bold,
@@ -402,7 +414,7 @@ class _ReviewCardState extends State<_ReviewCard> {
                       CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.review.name,
+                      widget.name,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
@@ -410,7 +422,7 @@ class _ReviewCardState extends State<_ReviewCard> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      widget.review.time,
+                      widget.time,
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 10,
@@ -425,7 +437,7 @@ class _ReviewCardState extends State<_ReviewCard> {
                   (index) => Icon(
                     Icons.star_rounded,
                     size: 15,
-                    color: index < widget.review.rating
+                    color: index < widget.rating
                         ? Colors.amber
                         : Theme.of(context).colorScheme.outlineVariant,
                   ),
@@ -435,7 +447,7 @@ class _ReviewCardState extends State<_ReviewCard> {
           ),
           const SizedBox(height: 12),
           Text(
-            widget.review.text,
+            widget.text,
             style: TextStyle(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
               height: 1.5,
@@ -475,20 +487,4 @@ class _ReviewCardState extends State<_ReviewCard> {
       ),
     );
   }
-}
-
-class _MockReview {
-  final String name;
-  final int rating;
-  final String text;
-  final String time;
-  final int likes;
-
-  const _MockReview({
-    required this.name,
-    required this.rating,
-    required this.text,
-    required this.time,
-    required this.likes,
-  });
 }

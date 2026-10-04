@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../models/book.dart';
+import '../../services/book_service.dart';
 import '../../services/cart_service.dart';
-import '../../services/mock_book_service.dart';
 import '../../services/wishlist_service.dart';
 import '../../widgets/book_card.dart';
 import '../cart/cart_screen.dart';
 import 'reviews_screen.dart';
 
-class BookDetailsScreen extends StatelessWidget {
+class BookDetailsScreen extends StatefulWidget {
   final Book book;
   final List<Book>? similarBooks;
 
@@ -20,7 +20,34 @@ class BookDetailsScreen extends StatelessWidget {
   });
 
   @override
+  State<BookDetailsScreen> createState() => _BookDetailsScreenState();
+}
+
+class _BookDetailsScreenState extends State<BookDetailsScreen> {
+  final BookService _bookService = BookService();
+  List<Book> _allBooks = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBooks();
+  }
+
+  Future<void> _loadBooks() async {
+    try {
+      final books = await _bookService.fetchBooks();
+      setState(() {
+        _allBooks = books;
+      });
+    } catch (e) {
+      // Handle error silently
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final book = widget.book;
+    
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
@@ -206,7 +233,7 @@ class BookDetailsScreen extends StatelessWidget {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(18),
             child: Image.network(
-              book.coverUrl,
+              widget.book.coverUrl,
               width: width,
               height: height,
               fit: BoxFit.cover,
@@ -223,7 +250,7 @@ class BookDetailsScreen extends StatelessWidget {
             ),
           ),
         ),
-        if (book.isBestseller)
+        if (widget.book.isBestseller)
           Positioned(
             top: 12,
             left: 12,
@@ -255,7 +282,7 @@ class BookDetailsScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          book.genre.toUpperCase(),
+          widget.book.genre.toUpperCase(),
           style: const TextStyle(
             color: AppColors.burgundy,
             fontSize: 11,
@@ -265,7 +292,7 @@ class BookDetailsScreen extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          book.title,
+          widget.book.title,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.bold,
@@ -274,7 +301,7 @@ class BookDetailsScreen extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'by ${book.author}',
+          'by ${widget.book.author}',
           style: TextStyle(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
             fontSize: 15,
@@ -291,7 +318,7 @@ class BookDetailsScreen extends StatelessWidget {
             ),
             const SizedBox(width: 5),
             Text(
-              book.rating.toString(),
+              widget.book.rating.toString(),
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
@@ -300,7 +327,7 @@ class BookDetailsScreen extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              '${book.reviewCount} reviews',
+              '${widget.book.reviewCount} reviews',
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 13,
@@ -310,7 +337,7 @@ class BookDetailsScreen extends StatelessWidget {
         ),
         const SizedBox(height: 18),
         Text(
-          '₦${book.price.toStringAsFixed(0)}',
+          '₦${widget.book.price.toStringAsFixed(0)}',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 color: AppColors.burgundy,
                 fontWeight: FontWeight.bold,
@@ -377,14 +404,14 @@ class BookDetailsScreen extends StatelessWidget {
       height: 50,
       child: OutlinedButton.icon(
         onPressed: () {
-          CartService.instance.add(book);
+          CartService.instance.add(widget.book);
 
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
             ..showSnackBar(
               SnackBar(
                 duration: const Duration(milliseconds: 1000),
-                content: Text('${book.title} added to cart'),
+                content: Text('${widget.book.title} added to cart'),
               ),
             );
         },
@@ -415,7 +442,7 @@ class BookDetailsScreen extends StatelessWidget {
       height: 50,
       child: ElevatedButton.icon(
         onPressed: () {
-          CartService.instance.add(book);
+          CartService.instance.add(widget.book);
 
           Navigator.push(
             context,
@@ -450,7 +477,7 @@ class BookDetailsScreen extends StatelessWidget {
       context: context,
       title: 'About this book',
       child: Text(
-        book.description,
+        widget.book.description,
         style: TextStyle(
           color: Theme.of(context).colorScheme.onSurfaceVariant,
           fontSize: 14,
@@ -466,22 +493,22 @@ class BookDetailsScreen extends StatelessWidget {
       title: 'Book Information',
       child: Column(
         children: [
-          _infoRow(context, 'Title', book.title),
+          _infoRow(context, 'Title', widget.book.title),
           _infoDivider(context),
-          _infoRow(context, 'Author', book.author),
+          _infoRow(context, 'Author', widget.book.author),
           _infoDivider(context),
-          _infoRow(context, 'Genre', book.genre),
+          _infoRow(context, 'Genre', widget.book.genre),
           _infoDivider(context),
           _infoRow(
             context,
             'Rating',
-            '${book.rating} / 5',
+            '${widget.book.rating} / 5',
           ),
           _infoDivider(context),
           _infoRow(
             context,
             'Reviews',
-            '${book.reviewCount}',
+            '${widget.book.reviewCount}',
           ),
         ],
       ),
@@ -497,7 +524,7 @@ class BookDetailsScreen extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => ReviewsScreen(book: book),
+              builder: (_) => ReviewsScreen(book: widget.book),
             ),
           );
         },
@@ -515,7 +542,7 @@ class BookDetailsScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
-                book.rating.toString(),
+                widget.book.rating.toString(),
                 style: TextStyle(
                   fontSize: 34,
                   fontWeight: FontWeight.bold,
@@ -531,7 +558,7 @@ class BookDetailsScreen extends StatelessWidget {
                       5,
                       (index) => Icon(
                         Icons.star_rounded,
-                        color: index < book.rating.round()
+                        color: index < widget.book.rating.round()
                             ? Colors.amber
                             : Theme.of(context).colorScheme.outlineVariant,
                         size: 18,
@@ -540,7 +567,7 @@ class BookDetailsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${book.reviewCount} customer reviews',
+                    '${widget.book.reviewCount} customer reviews',
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontSize: 12,
@@ -556,7 +583,7 @@ class BookDetailsScreen extends StatelessWidget {
             name: 'Daniel',
             date: '2 days ago',
             text:
-                'Really enjoyed this book. The writing is excellent and the story kept me interested.',
+                'Really enjoyed this widget.book. The writing is excellent and the story kept me interested.',
             rating: 5,
           ),
           const SizedBox(height: 14),
@@ -662,9 +689,9 @@ class BookDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildSimilarBooks(BuildContext context) {
-    final books = (similarBooks ??
-            MockBookService.books)
-        .where((item) => item.id != book.id)
+    final availableBooks = widget.similarBooks ?? _allBooks;
+    final books = availableBooks
+        .where((item) => item.id != widget.book.id)
         .take(5)
         .toList();
 
@@ -700,7 +727,7 @@ class BookDetailsScreen extends StatelessWidget {
                     MaterialPageRoute(
                       builder: (_) => BookDetailsScreen(
                         book: similarBook,
-                        similarBooks: books,
+                        similarBooks: availableBooks,
                       ),
                     ),
                   );
