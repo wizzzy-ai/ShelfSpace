@@ -33,11 +33,13 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
     });
     try {
       final reviews = await _bookService.fetchBookReviews(widget.book.id);
+      if (!mounted) return;
       setState(() {
         _reviews = reviews;
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
@@ -187,40 +189,42 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
         icon: const Icon(Icons.rate_review_outlined),
         label: const Text('Write Review'),
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          16,
-          10,
-          16,
-          100,
-        ),
-        children: [
-          _buildRatingSummary(rating),
-          const SizedBox(height: 22),
-          const Text(
-            'Customer Reviews',
-            style: TextStyle(
-              fontSize: 19,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-          ..._reviews.map(
-            (review) => Padding(
-              padding: const EdgeInsets.only(
-                bottom: 12,
+      body: _isLoading && _reviews.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: const EdgeInsets.fromLTRB(
+                16,
+                10,
+                16,
+                100,
               ),
-              child: _ReviewCard(
-                name: review['customerName'] ?? 'Anonymous',
-                rating: review['rating'] ?? 0,
-                text: review['comment'] ?? '',
-                time: review['createdAt'] ?? '',
-                likes: 0,
-              ),
+              children: [
+                _buildRatingSummary(rating),
+                const SizedBox(height: 22),
+                const Text(
+                  'Customer Reviews',
+                  style: TextStyle(
+                    fontSize: 19,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ..._reviews.map(
+                  (review) => Padding(
+                    padding: const EdgeInsets.only(
+                      bottom: 12,
+                    ),
+                    child: _ReviewCard(
+                      name: review['customerName'] ?? 'Anonymous',
+                      rating: review['rating'] ?? 0,
+                      text: review['comment'] ?? '',
+                      time: review['createdAt'] ?? '',
+                      likes: 0,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
     );
   }
 
