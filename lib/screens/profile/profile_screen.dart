@@ -99,24 +99,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   },
                 ),
 
-                const SizedBox(height: 10),
-
-                _buildMenuCard(
-                  context,
-                  icon: Icons.dashboard_outlined,
-                  title: 'Admin Panel',
-                  subtitle: 'Manage books, orders, and customers',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const AdminDashboardScreen(),
-                      ),
-                    );
-                  },
-                ),
-
-                const SizedBox(height: 10),
+                if (_authService.currentUser?['role'] == 'admin') ...[
+                  const SizedBox(height: 10),
+                  _buildMenuCard(
+                    context,
+                    icon: Icons.dashboard_outlined,
+                    title: 'Admin Panel',
+                    subtitle: 'Manage books, orders, and customers',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const AdminDashboardScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                ],
 
                 _buildMenuCard(
                   context,

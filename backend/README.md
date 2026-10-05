@@ -10,13 +10,16 @@ Requires Node.js 20 or newer. From this directory:
 npm install
 ```
 
-Copy `.env.example` to `.env`, set `JWT_SECRET` to a unique random value of at least 32 characters, and set an admin email and password of at least 12 characters. Then run:
+Copy `.env.example` to `.env`. Set `JWT_SECRET` to a unique random value of at least 32 characters, and replace `ADMIN_EMAIL` and `ADMIN_PASSWORD` with credentials you choose (the password must be at least 12 characters). Never use the example values for a deployed environment. From the `backend` directory, run:
 
 ```sh
+npm run seed:admin
 npm run dev
 ```
 
-The service listens on `http://localhost:3000`. SQLite creates `data/shelfspace.sqlite` on first run and seeds the five books currently shown in the Flutter prototype. Set `DATABASE_FILE=:memory:` for an ephemeral database. The first admin account is created once when `ADMIN_EMAIL` and `ADMIN_PASSWORD` are configured; later password changes do not get overwritten on restart.
+The seed command creates an admin account using the configured name, email, and password. Sign in to ShelfSpace with that email and password; only accounts with the admin role see the Admin Panel. Normal sign-up always creates a customer account. The seed command never changes an existing admin password and reports an error if the configured email already belongs to a customer. The API also seeds the admin automatically at startup when both admin environment variables are configured.
+
+The service listens on `http://localhost:3000`. SQLite creates `data/shelfspace.sqlite` on first run and seeds the books currently shown in the Flutter prototype. Set `DATABASE_FILE=:memory:` for an ephemeral database.
 
 For Android emulator use `http://10.0.2.2:3000`; iOS simulator and desktop can use `http://localhost:3000`. For a physical device, use the development machine's LAN address. Set `CLIENT_ORIGIN` to a comma-separated list of trusted browser origins in production.
 
