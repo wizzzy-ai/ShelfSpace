@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../services/auth_service.dart';
+import 'reset_password_screen.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -14,6 +16,9 @@ class ForgotPasswordScreen extends StatefulWidget {
 class _ForgotPasswordScreenState
     extends State<ForgotPasswordScreen> {
   final _emailController = TextEditingController();
+  final _authService = AuthService();
+
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -21,8 +26,10 @@ class _ForgotPasswordScreenState
     super.dispose();
   }
 
-  void _sendResetLink() {
-    if (_emailController.text.trim().isEmpty) {
+  Future<void> _sendCode() async {
+    final email = _emailController.text.trim();
+
+    if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please enter your email address.'),
@@ -31,13 +38,30 @@ class _ForgotPasswordScreenState
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Password reset will be connected to the backend soon.',
+    setState(() {
+      _isLoading = true;
+    });
+
+    final result = await _authService.forgotPassword(email: email);
+
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (result['success'] == true) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ResetPasswordScreen(email: email),
         ),
-      ),
-    );
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['error'] ?? 'Could not send the code')),
+      );
+    }
   }
 
   @override
@@ -52,7 +76,7 @@ class _ForgotPasswordScreenState
         ),
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(28, 20, 28, 28),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,7 +109,7 @@ class _ForgotPasswordScreenState
               const SizedBox(height: 10),
 
               Text(
-                'Enter your email address and we will send you instructions to reset your password.',
+                'Enter your email address and we will send you a 6-digit code to reset your password.',
                 style: GoogleFonts.inter(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                   fontSize: 15,
@@ -113,6 +137,7 @@ class _ForgotPasswordScreenState
                   hintText: 'Enter your email',
                   prefixIcon: Icon(Icons.email_outlined),
                 ),
+                onSubmitted: (_) => _isLoading ? null : _sendCode(),
               ),
 
               const SizedBox(height: 24),
@@ -121,8 +146,17 @@ class _ForgotPasswordScreenState
                 width: double.infinity,
                 height: 54,
                 child: ElevatedButton(
-                  onPressed: _sendResetLink,
-                  child: const Text('Send Reset Link'),
+                  onPressed: _isLoading ? null : _sendCode,
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Text('Send Code'),
                 ),
               ),
             ],
