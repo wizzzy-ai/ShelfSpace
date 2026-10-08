@@ -11,7 +11,6 @@ class AuthService {
 
   final String _baseUrl = ApiConstants.baseUrl;
 
-  // Store token locally (in production, use secure storage like flutter_secure_storage)
   String? _token;
   Map<String, dynamic>? _currentUser;
 
@@ -40,9 +39,11 @@ class AuthService {
       final data = jsonDecode(response.body);
       
       if (response.statusCode == 201) {
-        _token = data['token'];
-        _currentUser = data['user'];
-        return {'success': true, 'user': data['user'], 'token': data['token']};
+        return {
+          'success': true,
+          'email': data['email'] ?? email,
+          'emailSent': data['emailSent'] ?? true,
+        };
       } else {
         return {'success': false, 'error': data['error'] ?? 'Registration failed'};
       }
@@ -72,7 +73,55 @@ class AuthService {
         _currentUser = data['user'];
         return {'success': true, 'user': data['user'], 'token': data['token']};
       } else {
-        return {'success': false, 'error': data['error'] ?? 'Login failed'};
+        return {
+          'success': false,
+          'error': data['error'] ?? 'Login failed',
+          'code': data['code'],
+          'email': data['email'],
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'error': 'Network error: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> verifyEmail({
+    required String email,
+    required String otp,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl${ApiConstants.verifyEmail}'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'otp': otp}),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'message': data['message']};
+      } else {
+        return {'success': false, 'error': data['error'] ?? 'Verification failed'};
+      }
+    } catch (e) {
+      return {'success': false, 'error': 'Network error: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> resendOtp({required String email}) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl${ApiConstants.resendOtp}'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email}),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {'success': true, 'message': data['message']};
+      } else {
+        return {'success': false, 'error': data['error'] ?? 'Could not resend the code'};
       }
     } catch (e) {
       return {'success': false, 'error': 'Network error: $e'};
@@ -195,7 +244,8 @@ class AuthService {
   }
   
   Future<Map<String, dynamic>> resetPassword({
-    required String token,
+    required String email,
+    required String otp,
     required String newPassword,
   }) async {
     try {
@@ -203,13 +253,14 @@ class AuthService {
         Uri.parse('$_baseUrl${ApiConstants.resetPassword}'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'token': token,
+          'email': email,
+          'otp': otp,
           'newPassword': newPassword,
         }),
       );
-      
+
       final data = jsonDecode(response.body);
-      
+
       if (response.statusCode == 200) {
         return {'success': true, 'message': data['message']};
       } else {
@@ -219,7 +270,29 @@ class AuthService {
       return {'success': false, 'error': 'Network error: $e'};
     }
   }
-  
+
+  Future<Map<String, dynamic>> googleLogin({required String idToken}) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl${ApiConstants.google}'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'idToken': idToken}),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        _token = data['token'];
+        _currentUser = data['user'];
+        return {'success': true, 'user': data['user'], 'token': data['token']};
+      } else {
+        return {'success': false, 'error': data['error'] ?? 'Google sign-in failed'};
+      }
+    } catch (e) {
+      return {'success': false, 'error': 'Network error: $e'};
+    }
+  }
+
   void logout() {
     _token = null;
     _currentUser = null;

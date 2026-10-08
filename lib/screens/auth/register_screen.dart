@@ -3,7 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../services/auth_service.dart';
-import 'login_screen.dart';
+import 'google_sign_in_button.dart';
+import 'verify_email_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -77,15 +78,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     if (result['success']) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Account created successfully! Please login.')),
-      );
-      Navigator.pushAndRemoveUntil(
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => const LoginScreen(),
+          builder: (_) => VerifyEmailScreen(
+            email: result['email'] ?? email,
+            emailSent: result['emailSent'] ?? true,
+          ),
         ),
-        (route) => false,
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -237,6 +237,34 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       : const Text('Create Account'),
                 ),
               ),
+
+              const SizedBox(height: 24),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: Divider(color: Theme.of(context).colorScheme.outlineVariant),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    child: Text(
+                      'OR',
+                      style: GoogleFonts.inter(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Divider(color: Theme.of(context).colorScheme.outlineVariant),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+
+              const GoogleSignInButton(),
 
               const SizedBox(height: 24),
 

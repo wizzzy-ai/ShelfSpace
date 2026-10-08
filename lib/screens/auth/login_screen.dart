@@ -5,7 +5,9 @@ import '../../core/constants/app_colors.dart';
 import '../../services/auth_service.dart';
 import '../main/main_shell.dart';
 import 'forgot_password_screen.dart';
+import 'google_sign_in_button.dart';
 import 'register_screen.dart';
+import 'verify_email_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -60,6 +62,14 @@ class _LoginScreenState extends State<LoginScreen> {
           builder: (_) => const MainShell(),
         ),
         (route) => false,
+      );
+    } else if (result['code'] == 'EMAIL_NOT_VERIFIED') {
+      // Right password, but the email was never verified: go to the code screen.
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => VerifyEmailScreen(email: result['email'] ?? email),
+        ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -274,41 +284,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 24),
 
               // Google
-              SizedBox(
-                width: double.infinity,
-                height: 54,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Google sign-in will be connected later.',
-                        ),
-                      ),
-                    );
-                  },
-                  icon: Icon(
-                    Icons.g_mobiledata_rounded,
-                    size: 28,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                  label: Text(
-                    'Continue with Google',
-                    style: GoogleFonts.inter(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(
-                      color: Theme.of(context).colorScheme.outlineVariant,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                ),
-              ),
+              const GoogleSignInButton(),
 
               const SizedBox(height: 28),
 
