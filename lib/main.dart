@@ -8,8 +8,10 @@ import 'profile_orders/providers/orders_provider.dart';
 import 'profile_orders/providers/profile_provider.dart';
 import 'core/theme/app_theme_controller.dart';
 import 'screens/splash/splash_screen.dart';
+import 'services/google_auth_service.dart';
 
-void main() {
+void main() async {
+  await GoogleAuthService.instance.init();
   runApp(const ShelfSpaceApp());
 }
 

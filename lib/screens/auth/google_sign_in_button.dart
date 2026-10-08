@@ -26,13 +26,10 @@ class _GoogleSignInButtonState extends State<GoogleSignInButton> {
   void initState() {
     super.initState();
     if (kIsWeb) {
-      GoogleAuthService.instance.init().then((_) {
-        if (!mounted) return;
-        _subscription = GoogleAuthService.instance.events.listen(
-          _onGoogleEvent,
-          onError: (Object error) => _showMessage('Google sign-in failed. Please try again.'),
-        );
-      });
+      _subscription = GoogleAuthService.instance.events.listen(
+        _onGoogleEvent,
+        onError: (Object error) => _showMessage('Google sign-in failed. Please try again.'),
+      );
     }
   }
 

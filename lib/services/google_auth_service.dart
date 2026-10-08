@@ -22,7 +22,6 @@ class GoogleAuthService {
 
 
   Future<String?> signInWithPicker() async {
-    await init();
     try {
       final account = await GoogleSignIn.instance.authenticate();
       return account.authentication.idToken;
