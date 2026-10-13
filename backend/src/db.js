@@ -14,7 +14,14 @@ const pool = mysql.createPool({
 
 const REQUIRED_COLUMNS = {
   Users: ['phone', 'disabled'],
-  Books: ['isBestseller', 'isNewArrival', 'isFeatured']
+  Books: [
+    'isBestseller',
+    'isNewArrival',
+    'isFeatured',
+    'ebookStorageKey',
+    'ebookFileName',
+    'ebookFormat'
+  ]
 };
 
 pool.checkSchema = async function checkSchema() {
@@ -34,7 +41,16 @@ pool.checkSchema = async function checkSchema() {
     for (const column of columns) if (!have.includes(column)) missing.push(`${table}.${column}`);
   }
   if (missing.length) {
-    throw new Error(`Your database is missing: ${missing.join(', ')}. Run backend/database/app_migration.sql in MySQL Workbench once, then restart.`);
+    const migrations = [
+      ...(missing.some(column => column.startsWith('Users.')) ||
+          missing.some(column => ['Books.isBestseller', 'Books.isNewArrival', 'Books.isFeatured'].includes(column))
+        ? ['backend/database/app_migration.sql']
+        : []),
+      ...(missing.some(column => column.startsWith('Books.ebook'))
+        ? ['backend/database/ebook_migration.sql']
+        : [])
+    ];
+    throw new Error(`Your database is missing: ${missing.join(', ')}. Run ${migrations.join(' and ')} in MySQL Workbench, then restart.`);
   }
 };
 

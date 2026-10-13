@@ -1,10 +1,76 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../models/book.dart';
+import '../../services/auth_service.dart';
+import '../../services/book_service.dart';
 import '../../services/notification_service.dart';
+import '../../services/order_service.dart';
+import '../../services/wishlist_service.dart';
+import '../home/home_screen.dart';
+import '../orders/orders_screen.dart';
+import '../wishlist/wishlist_screen.dart';
 
-class NotificationsScreen extends StatelessWidget {
+class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
+
+  @override
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends State<NotificationsScreen> {
+  bool _isLoading = true;
+  String? _loadError;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotifications();
+  }
+
+  Future<void> _loadNotifications() async {
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
+
+    try {
+      final errors = <String>[];
+      if (AuthService().token != null) {
+        await Future.wait([
+          OrderService.instance.loadCustomerOrders(),
+          WishlistService.instance.load(),
+        ]);
+
+        errors.addAll([
+          OrderService.instance.error,
+          WishlistService.instance.error,
+        ].whereType<String>());
+      }
+
+      var newArrivals = <Book>[];
+      try {
+        newArrivals = await BookService().fetchNewArrivals(limit: 5);
+      } catch (error) {
+        errors.add('Could not load new arrivals: $error');
+      }
+
+      await NotificationService.instance.refresh(
+        newArrivals: newArrivals,
+      );
+      if (errors.isNotEmpty) {
+        throw StateError(errors.join('\n'));
+      }
+    } catch (error) {
+      _loadError = 'Unable to load notifications: $error';
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   void _openNotification(
     BuildContext context,
@@ -12,37 +78,34 @@ class NotificationsScreen extends StatelessWidget {
   ) {
     NotificationService.instance.markAsRead(notification.id);
 
-    String message;
-
     switch (notification.type) {
       case NotificationType.order:
-        message = 'Opening your order...';
-        break;
-
       case NotificationType.shipping:
-        message = 'Opening delivery tracking...';
-        break;
-
       case NotificationType.delivered:
-        message = 'Opening delivered order...';
+        Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+            builder: (_) => const OrdersScreen(),
+          ),
+        );
         break;
-
       case NotificationType.newArrival:
-        message = 'Opening new arrivals...';
+        Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+            builder: (_) => HomeScreen(onSearchTap: () {}),
+          ),
+        );
         break;
-
       case NotificationType.wishlist:
-        message = 'Opening your wishlist...';
+        Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+            builder: (_) => const WishlistScreen(),
+          ),
+        );
         break;
     }
-
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-        ),
-      );
   }
 
   @override
@@ -76,6 +139,11 @@ class NotificationsScreen extends StatelessWidget {
               );
             },
           ),
+          IconButton(
+            tooltip: 'Refresh notifications',
+            onPressed: _isLoading ? null : _loadNotifications,
+            icon: const Icon(Icons.refresh_rounded),
+          ),
           const SizedBox(width: 6),
         ],
       ),
@@ -85,34 +153,78 @@ class NotificationsScreen extends StatelessWidget {
           final notifications =
               NotificationService.instance.notifications;
 
+          if (_isLoading && notifications.isEmpty) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          if (_loadError != null && notifications.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _loadError!,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton(
+                      onPressed: _loadNotifications,
+                      child: const Text('Try again'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
           if (notifications.isEmpty) {
             return _buildEmptyState(context);
           }
 
-          return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(
-              16,
-              8,
-              16,
-              24,
-            ),
-            itemCount: notifications.length,
-            separatorBuilder: (_, _) {
-              return const SizedBox(height: 10);
-            },
-            itemBuilder: (context, index) {
-              final notification = notifications[index];
+          return Column(
+            children: [
+              if (_loadError != null)
+                MaterialBanner(
+                  content: Text(_loadError!),
+                  actions: [
+                    TextButton(
+                      onPressed: _loadNotifications,
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              Expanded(
+                child: ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(
+                    16,
+                    8,
+                    16,
+                    24,
+                  ),
+                  itemCount: notifications.length,
+                  separatorBuilder: (_, _) {
+                    return const SizedBox(height: 10);
+                  },
+                  itemBuilder: (context, index) {
+                    final notification = notifications[index];
 
-              return _NotificationCard(
-                notification: notification,
-                onTap: () {
-                  _openNotification(
-                    context,
-                    notification,
-                  );
-                },
-              );
-            },
+                    return _NotificationCard(
+                      notification: notification,
+                      onTap: () {
+                        _openNotification(
+                          context,
+                          notification,
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
           );
         },
       ),

@@ -8,6 +8,7 @@ import 'about_shelfspace_screen.dart';
 import 'addresses_screen.dart';
 import 'edit_profile_screen.dart';
 import 'help_support_screen.dart';
+import '../library/library_screen.dart';
 import 'payment_methods_screen.dart';
 import 'settings_screen.dart';
 
@@ -95,6 +96,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const OrdersScreen()),
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 10),
+
+                _buildMenuCard(
+                  context,
+                  icon: Icons.menu_book_outlined,
+                  title: 'My Library',
+                  subtitle: 'Read and download your accepted ebooks',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const LibraryScreen()),
                     );
                   },
                 ),
@@ -286,9 +302,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant,
-        ),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: Row(
         children: [

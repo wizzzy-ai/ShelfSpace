@@ -1,36 +1,91 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../models/book.dart';
+import '../../models/library_book.dart';
+import '../../services/auth_service.dart';
 import '../../services/book_service.dart';
 import '../../services/cart_service.dart';
+import '../../services/library_service.dart';
 import '../../services/wishlist_service.dart';
 import '../../widgets/book_card.dart';
 import '../cart/cart_screen.dart';
+import '../library/library_screen.dart';
 import 'reviews_screen.dart';
 
 class BookDetailsScreen extends StatefulWidget {
   final Book book;
   final List<Book>? similarBooks;
 
-  const BookDetailsScreen({
-    super.key,
-    required this.book,
-    this.similarBooks,
-  });
+  const BookDetailsScreen({super.key, required this.book, this.similarBooks});
 
   @override
   State<BookDetailsScreen> createState() => _BookDetailsScreenState();
 }
 
-class _BookDetailsScreenState extends State<BookDetailsScreen> {
+class _BookDetailsScreenState extends State<BookDetailsScreen>
+    with WidgetsBindingObserver {
   final BookService _bookService = BookService();
+  final LibraryService _libraryService = LibraryService();
+  final AuthService _authService = AuthService();
   List<Book> _allBooks = [];
+  LibraryBook? _ownedEbook;
+  String? _ebookAccessError;
+  bool _checkingEbookAccess = false;
+  Timer? _ebookAccessTimer;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadBooks();
+    _loadEbookAccess();
+    _ebookAccessTimer = Timer.periodic(
+      const Duration(seconds: 15),
+      (_) => _loadEbookAccess(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ebookAccessTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadEbookAccess();
+    }
+  }
+
+  Future<void> _loadEbookAccess() async {
+    if (!_authService.isAuthenticated || _checkingEbookAccess) return;
+
+    setState(() {
+      _checkingEbookAccess = true;
+      _ebookAccessError = null;
+    });
+    try {
+      final library = await _libraryService.fetchLibrary();
+      if (!mounted) return;
+      LibraryBook? ownedEbook;
+      for (final book in library) {
+        if (book.id == widget.book.id) {
+          ownedEbook = book;
+          break;
+        }
+      }
+      setState(() => _ownedEbook = ownedEbook);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _ebookAccessError = error.toString());
+    } finally {
+      if (mounted) setState(() => _checkingEbookAccess = false);
+    }
   }
 
   Future<void> _loadBooks() async {
@@ -47,7 +102,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final book = widget.book;
-    
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
@@ -68,8 +123,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
             child: AnimatedBuilder(
               animation: WishlistService.instance,
               builder: (context, _) {
-                final isWishlisted =
-                    WishlistService.instance.contains(book);
+                final isWishlisted = WishlistService.instance.contains(book);
 
                 return IconButton(
                   padding: EdgeInsets.zero,
@@ -123,15 +177,13 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
           final double maxContentWidth = isDesktop
               ? 1120
               : isTablet
-                  ? 900
-                  : double.infinity;
+              ? 900
+              : double.infinity;
 
           return SafeArea(
             child: Center(
               child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: maxContentWidth,
-                ),
+                constraints: BoxConstraints(maxWidth: maxContentWidth),
                 child: SingleChildScrollView(
                   padding: EdgeInsets.fromLTRB(
                     isDesktop ? 32 : 20,
@@ -186,10 +238,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
             ),
           ),
           const SizedBox(width: 36),
-          Expanded(
-            flex: 6,
-            child: _buildBookInfo(context),
-          ),
+          Expanded(flex: 6, child: _buildBookInfo(context)),
         ],
       );
     }
@@ -197,13 +246,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Center(
-          child: _buildCover(
-            context,
-            width: 215,
-            height: 300,
-          ),
-        ),
+        Center(child: _buildCover(context, width: 215, height: 300)),
         const SizedBox(height: 24),
         _buildBookInfo(context),
       ],
@@ -255,10 +298,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
             top: 12,
             left: 12,
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 6,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: AppColors.burgundy,
                 borderRadius: BorderRadius.circular(8),
@@ -294,10 +334,10 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
         Text(
           widget.book.title,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontWeight: FontWeight.bold,
-                height: 1.1,
-              ),
+            color: Theme.of(context).colorScheme.onSurface,
+            fontWeight: FontWeight.bold,
+            height: 1.1,
+          ),
         ),
         const SizedBox(height: 8),
         Text(
@@ -311,11 +351,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
         const SizedBox(height: 16),
         Row(
           children: [
-            const Icon(
-              Icons.star_rounded,
-              color: Colors.amber,
-              size: 22,
-            ),
+            const Icon(Icons.star_rounded, color: Colors.amber, size: 22),
             const SizedBox(width: 5),
             Text(
               widget.book.rating.toString(),
@@ -339,9 +375,9 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
         Text(
           '₦${widget.book.price.toStringAsFixed(0)}',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: AppColors.burgundy,
-                fontWeight: FontWeight.bold,
-              ),
+            color: AppColors.burgundy,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 8),
         const Row(
@@ -369,34 +405,174 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
   }
 
   Widget _buildActionButtons(BuildContext context) {
+    if (_authService.isAuthenticated) {
+      if (_checkingEbookAccess) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      if (_ebookAccessError != null) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Could not check your ebook access: $_ebookAccessError',
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: _loadEbookAccess,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Check again'),
+            ),
+          ],
+        );
+      }
+      if (_ownedEbook case final ebook?) {
+        if (ebook.hasFile) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Payment confirmed · This ebook is ready to read.',
+                style: TextStyle(
+                  color: AppColors.success,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildEbookActionButtons(context, ebook),
+            ],
+          );
+        } else {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Payment confirmed · Ebook file not yet uploaded.',
+                style: TextStyle(
+                  color: Colors.orange,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'The admin needs to upload the PDF or EPUB file before you can read or download this book.',
+                style: TextStyle(fontSize: 13),
+              ),
+            ],
+          );
+        }
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (_authService.isAuthenticated) ...[
+          Text(
+            widget.book.hasEbook
+                ? 'Purchase this book to add it to your library after payment confirmation.'
+                : 'This book does not have an ebook version available.',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 10),
+        ],
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < 360;
+
+            if (compact) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildAddToCartButton(context),
+                  const SizedBox(height: 10),
+                  _buildBuyNowButton(context),
+                ],
+              );
+            }
+
+            return Row(
+              children: [
+                Expanded(child: _buildAddToCartButton(context)),
+                const SizedBox(width: 10),
+                Expanded(child: _buildBuyNowButton(context)),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEbookActionButtons(BuildContext context, LibraryBook ebook) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 360;
+        final readButton = SizedBox(
+          height: 50,
+          child: FilledButton.tonalIcon(
+            onPressed: () => _readEbook(ebook),
+            icon: const Icon(Icons.menu_book_outlined),
+            label: const Text('Read in app'),
+          ),
+        );
+        final downloadButton = SizedBox(
+          height: 50,
+          child: OutlinedButton.icon(
+            onPressed: () => _downloadEbook(ebook),
+            icon: const Icon(Icons.download_rounded),
+            label: const Text('Download'),
+          ),
+        );
 
         if (compact) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildAddToCartButton(context),
-              const SizedBox(height: 10),
-              _buildBuyNowButton(context),
-            ],
+            children: [readButton, const SizedBox(height: 10), downloadButton],
           );
         }
-
         return Row(
           children: [
-            Expanded(
-              child: _buildAddToCartButton(context),
-            ),
+            Expanded(child: readButton),
             const SizedBox(width: 10),
-            Expanded(
-              child: _buildBuyNowButton(context),
-            ),
+            Expanded(child: downloadButton),
           ],
         );
       },
     );
+  }
+
+  Future<void> _readEbook(LibraryBook ebook) async {
+    try {
+      final bytes = await _libraryService.loadEbook(ebook);
+      if (!mounted) return;
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (_) => EbookReaderScreen(book: ebook, bytes: bytes),
+        ),
+      );
+    } catch (error) {
+      if (mounted) _showEbookMessage('Could not open ebook: $error');
+    }
+  }
+
+  Future<void> _downloadEbook(LibraryBook ebook) async {
+    try {
+      await _libraryService.downloadToDevice(ebook);
+      if (mounted) {
+        _showEbookMessage('Saved "${ebook.title}" to your device.');
+      }
+    } catch (error) {
+      if (mounted) _showEbookMessage('$error');
+    }
+  }
+
+  void _showEbookMessage(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   Widget _buildAddToCartButton(BuildContext context) {
@@ -415,10 +591,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
               ),
             );
         },
-        icon: const Icon(
-          Icons.shopping_cart_outlined,
-          size: 20,
-        ),
+        icon: const Icon(Icons.shopping_cart_outlined, size: 20),
         label: const Text(
           'Add to Cart',
           maxLines: 1,
@@ -426,9 +599,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
         ),
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.burgundy,
-          side: const BorderSide(
-            color: AppColors.burgundy,
-          ),
+          side: const BorderSide(color: AppColors.burgundy),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -446,15 +617,10 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
 
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => const CartScreen(),
-            ),
+            MaterialPageRoute(builder: (_) => const CartScreen()),
           );
         },
-        icon: const Icon(
-          Icons.flash_on_rounded,
-          size: 19,
-        ),
+        icon: const Icon(Icons.flash_on_rounded, size: 19),
         label: const Text(
           'Buy Now',
           maxLines: 1,
@@ -499,17 +665,9 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
           _infoDivider(context),
           _infoRow(context, 'Genre', widget.book.genre),
           _infoDivider(context),
-          _infoRow(
-            context,
-            'Rating',
-            '${widget.book.rating} / 5',
-          ),
+          _infoRow(context, 'Rating', '${widget.book.rating} / 5'),
           _infoDivider(context),
-          _infoRow(
-            context,
-            'Reviews',
-            '${widget.book.reviewCount}',
-          ),
+          _infoRow(context, 'Reviews', '${widget.book.reviewCount}'),
         ],
       ),
     );
@@ -523,9 +681,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => ReviewsScreen(book: widget.book),
-            ),
+            MaterialPageRoute(builder: (_) => ReviewsScreen(book: widget.book)),
           );
         },
         child: const Text(
@@ -582,8 +738,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
             context: context,
             name: 'Daniel',
             date: '2 days ago',
-            text:
-                'Really enjoyed this widget.book. The writing is excellent and the story kept me interested.',
+            text: 'Really enjoyed this widget.book. The writing is excellent and the story kept me interested.',
             rating: 5,
           ),
           const SizedBox(height: 14),
@@ -591,8 +746,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
             context: context,
             name: 'Hannah',
             date: '1 week ago',
-            text:
-                'A great read from beginning to end. Definitely worth adding to your collection.',
+            text: 'A great read from beginning to end. Definitely worth adding to your collection.',
             rating: 4,
           ),
         ],
@@ -613,9 +767,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant,
-        ),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -752,9 +904,7 @@ class _BookDetailsScreenState extends State<BookDetailsScreen> {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant,
-        ),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
         boxShadow: [
           BoxShadow(
             color: AppColors.dark.withValues(alpha: 0.035),

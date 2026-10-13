@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../../../models/book.dart';
@@ -31,7 +32,7 @@ class _AdminBooksScreenState extends State<AdminBooksScreen> {
     });
 
     try {
-      final books = await _bookService.fetchBooks();
+      final books = await _bookService.fetchBooks(limit: 100);
       setState(() {
         _books = books;
         _isLoading = false;
@@ -50,11 +51,7 @@ class _AdminBooksScreenState extends State<AdminBooksScreen> {
   }
 
   Widget _buildBookList() {
-    final genres = _books
-        .map((book) => book.genre)
-        .toSet()
-        .toList()
-      ..sort();
+    final genres = _books.map((book) => book.genre).toSet().toList()..sort();
 
     final selectedGenre = genres.contains(_selectedGenre)
         ? _selectedGenre
@@ -89,6 +86,7 @@ class _AdminBooksScreenState extends State<AdminBooksScreen> {
           book: book,
           onEdit: () => _editBook(context, book),
           onDelete: () => _deleteBook(context, book),
+          onUploadEbook: () => _uploadEbook(book),
         );
       },
     );
@@ -120,11 +118,9 @@ class _AdminBooksScreenState extends State<AdminBooksScreen> {
                         ),
                       );
 
-                      final genres = _books
-                          .map((book) => book.genre)
-                          .toSet()
-                          .toList()
-                        ..sort();
+                      final genres =
+                          _books.map((book) => book.genre).toSet().toList()
+                            ..sort();
 
                       final selectedGenre = genres.contains(_selectedGenre)
                           ? _selectedGenre
@@ -139,16 +135,14 @@ class _AdminBooksScreenState extends State<AdminBooksScreen> {
                               width: 200,
                               child: DropdownButtonFormField<String>(
                                 initialValue: selectedGenre,
+                                isExpanded: true,
                                 decoration: const InputDecoration(
                                   contentPadding: EdgeInsets.symmetric(
                                     horizontal: 12,
                                     vertical: 8,
                                   ),
                                 ),
-                                items: [
-                                  'All genres',
-                                  ...genres,
-                                ].map((genre) {
+                                items: ['All genres', ...genres].map((genre) {
                                   return DropdownMenuItem(
                                     value: genre,
                                     child: Text(genre),
@@ -171,16 +165,14 @@ class _AdminBooksScreenState extends State<AdminBooksScreen> {
                           const SizedBox(height: 8),
                           DropdownButtonFormField<String>(
                             initialValue: selectedGenre,
+                            isExpanded: true,
                             decoration: const InputDecoration(
                               contentPadding: EdgeInsets.symmetric(
                                 horizontal: 12,
                                 vertical: 8,
                               ),
                             ),
-                            items: [
-                              'All genres',
-                              ...genres,
-                            ].map((genre) {
+                            items: ['All genres', ...genres].map((genre) {
                               return DropdownMenuItem(
                                 value: genre,
                                 child: Text(genre),
@@ -197,9 +189,7 @@ class _AdminBooksScreenState extends State<AdminBooksScreen> {
                     },
                   ),
                 ),
-                Expanded(
-                  child: _buildBookList(),
-                ),
+                Expanded(child: _buildBookList()),
               ],
             ),
     );
@@ -215,6 +205,57 @@ class _AdminBooksScreenState extends State<AdminBooksScreen> {
 
     // For now, just reload the list. TODO: Implement actual backend API calls
     await _loadBooks();
+  }
+
+  Future<void> _uploadEbook(Book book) async {
+    if (book.hasEbook) {
+      final replace = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Replace ebook?'),
+          content: Text('Replace the current ebook for "${book.title}"?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Replace'),
+            ),
+          ],
+        ),
+      );
+      if (!mounted) return;
+      if (replace != true) return;
+    }
+
+    try {
+      final file = await FilePicker.pickFile(
+        type: FileType.custom,
+        allowedExtensions: const ['pdf', 'epub'],
+      );
+      if (!mounted) return;
+      if (file == null) return;
+      final bytes = await file.readAsBytes();
+      if (bytes.length > 50 * 1024 * 1024) {
+        throw Exception('Ebook files must be 50 MB or smaller.');
+      }
+      await _bookService.uploadEbook(
+        bookId: book.id,
+        fileName: file.name,
+        bytes: bytes,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Uploaded ebook for "${book.title}".')),
+      );
+      await _loadBooks();
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Ebook upload failed: $error')));
+    }
   }
 
   Future<void> _deleteBook(BuildContext context, Book book) async {
@@ -247,11 +288,13 @@ class _BookAdminRow extends StatelessWidget {
   final Book book;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback onUploadEbook;
 
   const _BookAdminRow({
     required this.book,
     required this.onEdit,
     required this.onDelete,
+    required this.onUploadEbook,
   });
 
   @override
@@ -331,28 +374,34 @@ class _BookAdminRow extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     flags.join(' · '),
-                    style: TextStyle(
-                      color: colorScheme.primary,
-                      fontSize: 11,
-                    ),
+                    style: TextStyle(color: colorScheme.primary, fontSize: 11),
+                  ),
+                ],
+                if (book.hasEbook) ...[
+                  const SizedBox(height: 5),
+                  Text(
+                    'Ebook ready · ${book.ebookFormat ?? 'File'}',
+                    style: TextStyle(color: colorScheme.primary, fontSize: 11),
                   ),
                 ],
               ],
             ),
           ),
+          IconButton(
+            tooltip: book.hasEbook ? 'Replace ebook' : 'Upload ebook',
+            onPressed: onUploadEbook,
+            icon: Icon(
+              book.hasEbook
+                  ? Icons.drive_file_rename_outline
+                  : Icons.upload_file_rounded,
+            ),
+          ),
           PopupMenuButton<String>(
             tooltip: 'Book actions',
-            onSelected: (action) =>
-                action == 'edit' ? onEdit() : onDelete(),
+            onSelected: (action) => action == 'edit' ? onEdit() : onDelete(),
             itemBuilder: (_) => const [
-              PopupMenuItem(
-                value: 'edit',
-                child: Text('Edit'),
-              ),
-              PopupMenuItem(
-                value: 'delete',
-                child: Text('Delete'),
-              ),
+              PopupMenuItem(value: 'edit', child: Text('Edit')),
+              PopupMenuItem(value: 'delete', child: Text('Delete')),
             ],
           ),
         ],
@@ -397,9 +446,7 @@ class _BookFormDialogState extends State<_BookFormDialog> {
     _descriptionController = TextEditingController(
       text: book?.description ?? '',
     );
-    _coverController = TextEditingController(
-      text: book?.coverUrl ?? '',
-    );
+    _coverController = TextEditingController(text: book?.coverUrl ?? '');
     _priceController = TextEditingController(
       text: book == null ? '' : book.price.toStringAsFixed(0),
     );
@@ -440,11 +487,7 @@ class _BookFormDialogState extends State<_BookFormDialog> {
                 _textField(_titleController, 'Title'),
                 _textField(_authorController, 'Author'),
                 _textField(_genreController, 'Genre'),
-                _textField(
-                  _descriptionController,
-                  'Description',
-                  maxLines: 3,
-                ),
+                _textField(_descriptionController, 'Description', maxLines: 3),
                 _textField(
                   _coverController,
                   'Cover image URL',
@@ -457,8 +500,7 @@ class _BookFormDialogState extends State<_BookFormDialog> {
                       child: _textField(
                         _priceController,
                         'Price (₦)',
-                        keyboardType:
-                            const TextInputType.numberWithOptions(
+                        keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
                         validator: _validatePrice,
@@ -515,10 +557,7 @@ class _BookFormDialogState extends State<_BookFormDialog> {
           onPressed: () => Navigator.pop(context),
           child: const Text('Cancel'),
         ),
-        ElevatedButton(
-          onPressed: _save,
-          child: const Text('Save book'),
-        ),
+        ElevatedButton(onPressed: _save, child: const Text('Save book')),
       ],
     );
   }
@@ -540,9 +579,7 @@ class _BookFormDialogState extends State<_BookFormDialog> {
         decoration: InputDecoration(labelText: label),
         validator:
             validator ??
-            (value) =>
-                required &&
-                    (value == null || value.trim().isEmpty)
+            (value) => required && (value == null || value.trim().isEmpty)
                 ? 'Required'
                 : null,
       ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../models/book.dart';
 import '../../services/book_service.dart';
+import '../../widgets/app_state_view.dart';
 import '../../widgets/book_card.dart';
 import '../../widgets/category_card.dart';
 import '../../widgets/featured_book_banner.dart';
@@ -12,7 +13,9 @@ import '../../widgets/section_header.dart';
 import '../books/book_details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, required this.onSearchTap});
+
+  final VoidCallback onSearchTap;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -22,6 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final BookService _bookService = BookService();
   List<Book> _books = [];
   bool _isLoading = true;
+  String? _loadError;
 
   @override
   void initState() {
@@ -31,14 +35,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadBooks() async {
     try {
-      final books = await _bookService.fetchBooks();
+      final books = await _bookService.fetchBooks(limit: 100);
+      if (!mounted) return;
       setState(() {
         _books = books;
         _isLoading = false;
+        _loadError = null;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
+        _loadError = e.toString();
       });
     }
   }
@@ -46,8 +54,35 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (_loadError != null) {
+      return Scaffold(
+        body: SafeArea(
+          child: AppErrorView(
+            title: 'Unable to load books',
+            message: _loadError!,
+            onRetry: () {
+              setState(() {
+                _isLoading = true;
+              });
+              _loadBooks();
+            },
+          ),
+        ),
+      );
+    }
+
+    if (_books.isEmpty) {
       return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        body: SafeArea(
+          child: AppEmptyView(
+            icon: Icons.menu_book_outlined,
+            title: 'No books in the catalog',
+            message: 'The books API returned no books. Add books in the Admin Panel or seed the configured database with the catalog data.',
+          ),
+        ),
       );
     }
 
@@ -56,33 +91,16 @@ class _HomeScreenState extends State<HomeScreen> {
       orElse: () => _books.first,
     );
 
-    final bestsellers =
-        _books.where((book) => book.isBestseller).toList();
+    final bestsellers = _books.where((book) => book.isBestseller).toList();
 
-    final newArrivals =
-        _books.where((book) => book.isNewArrival).toList();
+    final newArrivals = _books.where((book) => book.isNewArrival).toList();
 
     const categories = [
-      {
-        'title': 'Fiction',
-        'icon': Icons.auto_stories_outlined,
-      },
-      {
-        'title': 'Romance',
-        'icon': Icons.favorite_border_rounded,
-      },
-      {
-        'title': 'Mystery',
-        'icon': Icons.search_rounded,
-      },
-      {
-        'title': 'Business',
-        'icon': Icons.business_center_outlined,
-      },
-      {
-        'title': 'Science',
-        'icon': Icons.science_outlined,
-      },
+      {'title': 'Fiction', 'icon': Icons.auto_stories_outlined},
+      {'title': 'Romance', 'icon': Icons.favorite_border_rounded},
+      {'title': 'Mystery', 'icon': Icons.search_rounded},
+      {'title': 'Business', 'icon': Icons.business_center_outlined},
+      {'title': 'Science', 'icon': Icons.science_outlined},
     ];
 
     return Scaffold(
@@ -102,23 +120,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Text(
                             'Good morning 👋',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
+                            style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
                                   fontWeight: FontWeight.w500,
                                 ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             'Find your next great read with ShelfSpace.',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            style: Theme.of(context).textTheme.headlineSmall
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
@@ -133,23 +147,25 @@ class _HomeScreenState extends State<HomeScreen> {
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
               sliver: SliverToBoxAdapter(
-                child: TextField(
-                  readOnly: true,
-                  decoration: InputDecoration(
-                    hintText: 'Search ShelfSpace _books, authors, genres...',
-                    prefixIcon: const Icon(
-                      Icons.search_rounded,
-                    ),
-                    suffixIcon: Container(
-                      margin: const EdgeInsets.all(7),
-                      decoration: BoxDecoration(
-                        color: AppColors.burgundy,
-                        borderRadius: BorderRadius.circular(9),
-                      ),
-                      child: const Icon(
-                        Icons.tune_rounded,
-                        color: AppColors.white,
-                        size: 19,
+                child: GestureDetector(
+                  onTap: widget.onSearchTap,
+                  child: AbsorbPointer(
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Search ShelfSpace books, authors, genres...',
+                        prefixIcon: const Icon(Icons.search_rounded),
+                        suffixIcon: Container(
+                          margin: const EdgeInsets.all(7),
+                          decoration: BoxDecoration(
+                            color: AppColors.burgundy,
+                            borderRadius: BorderRadius.circular(9),
+                          ),
+                          child: const Icon(
+                            Icons.tune_rounded,
+                            color: AppColors.white,
+                            size: 19,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -182,10 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
               sliver: SliverToBoxAdapter(
-                child: SectionHeader(
-                  title: 'Categories',
-                  onSeeAll: () {},
-                ),
+                child: SectionHeader(title: 'Categories', onSeeAll: () {}),
               ),
             ),
 
@@ -195,9 +208,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: SizedBox(
                   height: 105,
                   child: ListView.separated(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     scrollDirection: Axis.horizontal,
                     itemCount: categories.length,
                     separatorBuilder: (_, _) {
@@ -229,10 +240,7 @@ class _HomeScreenState extends State<HomeScreen> {
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
               sliver: SliverToBoxAdapter(
-                child: SectionHeader(
-                  title: 'Bestsellers',
-                  onSeeAll: () {},
-                ),
+                child: SectionHeader(title: 'Bestsellers', onSeeAll: () {}),
               ),
             ),
 
@@ -242,9 +250,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: SizedBox(
                   height: 295,
                   child: ListView.separated(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     scrollDirection: Axis.horizontal,
                     itemCount: bestsellers.length,
                     separatorBuilder: (_, _) {
@@ -262,9 +268,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               builder: (_) => BookDetailsScreen(
                                 book: book,
                                 similarBooks: _books
-                                    .where(
-                                      (item) => item.id != book.id,
-                                    )
+                                    .where((item) => item.id != book.id)
                                     .take(3)
                                     .toList(),
                               ),
@@ -282,10 +286,7 @@ class _HomeScreenState extends State<HomeScreen> {
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
               sliver: SliverToBoxAdapter(
-                child: SectionHeader(
-                  title: 'New Arrivals',
-                  onSeeAll: () {},
-                ),
+                child: SectionHeader(title: 'New Arrivals', onSeeAll: () {}),
               ),
             ),
 
@@ -295,9 +296,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: SizedBox(
                   height: 295,
                   child: ListView.separated(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     scrollDirection: Axis.horizontal,
                     itemCount: newArrivals.length,
                     separatorBuilder: (_, _) {
@@ -315,9 +314,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               builder: (_) => BookDetailsScreen(
                                 book: book,
                                 similarBooks: _books
-                                    .where(
-                                      (item) => item.id != book.id,
-                                    )
+                                    .where((item) => item.id != book.id)
                                     .take(3)
                                     .toList(),
                               ),
@@ -333,6 +330,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-  );
+    );
   }
 }

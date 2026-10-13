@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/shelfspace_loader.dart';
+import '../main/main_shell.dart';
 import '../onboarding/onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -60,10 +62,13 @@ class _SplashScreenState extends State<SplashScreen>
   void _goToNextScreen() {
     if (!mounted) return;
 
+    final auth = AuthService();
+    final destination = auth.isAuthenticated ? const MainShell() : const OnboardingScreen();
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) => const OnboardingScreen(),
+        builder: (_) => destination,
       ),
     );
   }

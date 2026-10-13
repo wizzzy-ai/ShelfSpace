@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 
 import '../../../models/order.dart';
 import '../../../services/order_service.dart';
+import '../../auth/login_screen.dart';
 
 const _orderStatuses = [
   'Processing',
@@ -24,6 +25,14 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
   String _selectedStatus = 'All statuses';
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) OrderService.instance.loadAdminOrders();
+    });
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
@@ -36,6 +45,9 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
       body: AnimatedBuilder(
         animation: OrderService.instance,
         builder: (context, _) {
+          final error = OrderService.instance.error;
+          final sessionExpired =
+              error?.toLowerCase().contains('sign in again') ?? false;
           final query = _searchController.text.trim().toLowerCase();
           final orders = OrderService.instance.orders.where((order) {
             final matchesQuery =
@@ -51,6 +63,20 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
 
           return Column(
             children: [
+              if (error != null)
+                MaterialBanner(
+                  content: Text(error),
+                  actions: [
+                    TextButton(
+                      onPressed: sessionExpired
+                          ? () => _openAdminSignIn(context)
+                          : OrderService.instance.loadAdminOrders,
+                      child: Text(sessionExpired ? 'Sign in' : 'Retry'),
+                    ),
+                  ],
+                ),
+              if (OrderService.instance.isLoading && orders.isEmpty)
+                const LinearProgressIndicator(),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                 child: LayoutBuilder(
@@ -134,6 +160,11 @@ class _AdminOrdersScreenState extends State<AdminOrdersScreen> {
   }
 }
 
+void _openAdminSignIn(BuildContext context) {
+  Navigator.of(context)
+      .push(MaterialPageRoute(builder: (_) => const LoginScreen()));
+}
+
 class _AdminOrderCard extends StatelessWidget {
   final Order order;
 
@@ -171,16 +202,30 @@ class _AdminOrderCard extends StatelessWidget {
             ],
           ),
           Text(order.customerName),
+          Text(
+            'Payment: ${order.displayPaymentStatus} · ${order.paymentMethod}',
+            style: TextStyle(
+              color: order.displayPaymentStatus == 'Paid'
+                  ? colorScheme.primary
+                  : colorScheme.onSurfaceVariant,
+              fontSize: 12,
+              fontWeight: order.displayPaymentStatus == 'Paid'
+                  ? FontWeight.w600
+                  : null,
+            ),
+          ),
           const SizedBox(height: 3),
           Text(
             '${order.items.fold<int>(0, (sum, item) => sum + item.quantity)} items · ${_date(order.createdAt)}',
             style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12),
           ),
           const SizedBox(height: 10),
-          Row(
+          Wrap(
+            spacing: 10,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               const Text('Status', style: TextStyle(fontSize: 12)),
-              const SizedBox(width: 10),
               DropdownButton<String>(
                 value: _orderStatuses.contains(order.status)
                     ? order.status
@@ -193,11 +238,24 @@ class _AdminOrderCard extends StatelessWidget {
                     .toList(),
                 onChanged: (status) {
                   if (status != null) {
-                    OrderService.instance.updateOrderStatus(order.id, status);
+                    _updateStatus(context, status);
                   }
                 },
               ),
-              const Spacer(),
+              if (order.status == 'Processing')
+                FilledButton.tonalIcon(
+                  onPressed: () => _updateStatus(context, 'Confirmed'),
+                  icon: const Icon(Icons.check_rounded),
+                  label: const Text('Accept order'),
+                ),
+              if (order.status != 'Cancelled' &&
+                  order.displayPaymentStatus != 'Paid' &&
+                  order.displayPaymentStatus != 'Refunded')
+                FilledButton.icon(
+                  onPressed: () => _confirmPayment(context),
+                  icon: const Icon(Icons.payments_outlined),
+                  label: const Text('Confirm payment'),
+                ),
               TextButton(
                 onPressed: () => _showDetails(context, order),
                 child: const Text('Details'),
@@ -205,6 +263,50 @@ class _AdminOrderCard extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _updateStatus(BuildContext context, String status) async {
+    final updated = await OrderService.instance.updateOrderStatus(
+      order.id,
+      status,
+    );
+    if (!updated && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            OrderService.instance.error ?? 'Could not update this order.',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _confirmPayment(BuildContext context) async {
+    final confirmed = await OrderService.instance.confirmPayment(order.id);
+    if (!context.mounted) return;
+    final error = OrderService.instance.error;
+    if (!confirmed &&
+        (error?.toLowerCase().contains('sign in again') ?? false)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error!),
+          action: SnackBarAction(
+            label: 'Sign in',
+            onPressed: () => _openAdminSignIn(context),
+          ),
+        ),
+      );
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          confirmed
+              ? 'Payment confirmed. Any uploaded ebooks in this order are now available in the customer library.'
+              : error ?? 'Could not confirm payment.',
+        ),
       ),
     );
   }
@@ -230,6 +332,7 @@ class _AdminOrderCard extends StatelessWidget {
                   '${order.address}, ${order.city}',
                 ),
                 _detail(context, 'Payment method', order.paymentMethod),
+                _detail(context, 'Payment status', order.displayPaymentStatus),
                 _detail(context, 'Order date', _date(order.createdAt)),
                 const Divider(height: 24),
                 const Text(

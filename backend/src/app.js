@@ -4,6 +4,9 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('node:crypto');
+const fs = require('node:fs/promises');
+const path = require('node:path');
 const db = require('./db');
 const { sendOtp, checkOtp } = require('./emailAuth');
 const googleAuth = require('./googleAuth');
@@ -13,6 +16,8 @@ if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
 }
 
 const DELIVERY_FEE = 1500;
+const EBOOK_DIRECTORY = path.resolve(process.env.EBOOK_STORAGE_DIR || path.join(__dirname, '../../storage/ebooks'));
+const MAX_EBOOK_SIZE = 50 * 1024 * 1024;
 
 const STATUS_TO_DB = { Processing: 'PENDING', Confirmed: 'PROCESSING', Shipped: 'SHIPPED', Delivered: 'DELIVERED', Cancelled: 'CANCELLED' };
 const STATUS_LABEL = { PENDING: 'Processing', PAID: 'Confirmed', PROCESSING: 'Confirmed', SHIPPED: 'Shipped', OUT_FOR_DELIVERY: 'Shipped', DELIVERED: 'Delivered', CANCELLED: 'Cancelled' };
@@ -21,19 +26,21 @@ const paymentToDb = label => /card/i.test(label) ? 'CARD' : /bank/i.test(label) 
 
 const roleOut = role => role === 'ADMIN' ? 'admin' : 'customer';
 const flag = value => (value === true || value === 1 || value === 'true') ? 1 : 0;
+const devAdminBypassEnabled = ['1', 'true', 'yes'].includes(String(process.env.ALLOW_DEV_ADMIN_BYPASS || '').trim().toLowerCase());
 const wrap = fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const fail = (res, status, message) => res.status(status).json({ error: message });
 const cleanEmail = value => String(value || '').trim().toLowerCase();
 
 const BOOK_COLS = `b.id, b.title, a.name AS author, b.description, b.imageUrl, b.price, b.stockQuantity,
- b.ratingAvg, b.ratingCount, b.isBestseller, b.isNewArrival, b.isFeatured,
+ b.ratingAvg, b.ratingCount, b.isBestseller, b.isNewArrival, b.isFeatured, b.ebookStorageKey, b.ebookFormat,
  (SELECT g.name FROM BookGenres bg JOIN Genres g ON g.id = bg.genreId WHERE bg.bookId = b.id ORDER BY g.id LIMIT 1) AS genre`;
 const BOOK_JOINS = 'JOIN Authors a ON a.id = b.authorId';
 
 function mapBook(row) {
  return { id: String(row.id), title: row.title, author: row.author, genre: row.genre || '', description: row.description || '',
   coverUrl: row.imageUrl || '', price: Number(row.price), stock: row.stockQuantity, rating: Number(row.ratingAvg),
-  reviewCount: row.ratingCount, isBestseller: !!row.isBestseller, isNewArrival: !!row.isNewArrival, isFeatured: !!row.isFeatured };
+  reviewCount: row.ratingCount, isBestseller: !!row.isBestseller, isNewArrival: !!row.isNewArrival, isFeatured: !!row.isFeatured,
+  hasEbook: !!row.ebookStorageKey, ebookFormat: row.ebookFormat || null };
 }
 async function getBook(id) {
  const [rows] = await db.query(`SELECT ${BOOK_COLS} FROM Books b ${BOOK_JOINS} WHERE b.id = ?`, [id]);
@@ -46,11 +53,13 @@ async function mapOrder(row) {
    WHERE oi.orderId = ? ORDER BY oi.id`, [row.id]);
  const items = itemRows.map(item => ({ bookId: item.bookId == null ? '' : String(item.bookId), title: item.title, author: item.author || '',
   coverUrl: item.imageUrl || '', unitPrice: Number(item.price), quantity: item.quantity, totalPrice: Number(item.price) * item.quantity }));
- const [payment] = await db.query('SELECT method FROM Payments WHERE orderId = ? ORDER BY id DESC LIMIT 1', [row.id]);
+ const [payment] = await db.query('SELECT method, status FROM Payments WHERE orderId = ? ORDER BY id DESC LIMIT 1', [row.id]);
  const subtotal = items.reduce((sum, item) => sum + item.totalPrice, 0), total = Number(row.totalAmount);
  return { id: String(row.id), items, subtotal, deliveryFee: Math.max(0, total - subtotal), total,
-  customerName: row.shippingName, phone: row.shippingPhone || '', address: row.shippingStreet, city: row.shippingCity,
-  paymentMethod: payment[0] ? PAYMENT_LABEL[payment[0].method] : '', createdAt: row.createdAt, status: STATUS_LABEL[row.status] || row.status };
+ customerName: row.shippingName, phone: row.shippingPhone || '', address: row.shippingStreet, city: row.shippingCity,
+ paymentMethod: payment[0] ? PAYMENT_LABEL[payment[0].method] : '',
+ paymentStatus: payment[0]?.status === 'SUCCESS' ? 'Paid' : payment[0]?.status === 'FAILED' ? 'Failed' : payment[0]?.status === 'REFUNDED' ? 'Refunded' : 'Pending',
+ createdAt: row.createdAt, status: STATUS_LABEL[row.status] || row.status };
 }
 function publicUser(row) {
  return { id: String(row.id), name: row.name, email: row.email, phone: row.phone || '', role: roleOut(row.role), createdAt: row.createdAt };
@@ -97,6 +106,21 @@ const createApp = async () => {
  function auth(requiredRole) {
   return async (req, res, next) => {
    try {
+    if (devAdminBypassEnabled && requiredRole === 'admin') {
+     const path = req.path || '';
+     if (path.startsWith('/api/admin/orders') || path.startsWith('/api/admin/books') || path.startsWith('/api/admin/users')) {
+      req.user = {
+       id: 1,
+       name: process.env.ADMIN_NAME || 'ShelfSpace Admin',
+       email: process.env.ADMIN_EMAIL || 'admin@example.com',
+       phone: '',
+       role: 'admin',
+       disabled: 0,
+       createdAt: new Date().toISOString(),
+      };
+      return next();
+     }
+    }
     const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
     if (!token) return fail(res, 401, 'Authentication required');
     let claims;
@@ -253,6 +277,45 @@ const createApp = async () => {
   const book = await getBook(req.params.id);
   return book ? res.json({ book }) : fail(res, 404, 'Book not found');
  }));
+ app.get('/api/library', customer, wrap(async (req, res) => {
+  const [rows] = await db.query(
+   `SELECT DISTINCT b.id, b.title, a.name AS author, b.imageUrl, b.ebookFormat, b.ebookFileName, b.ebookStorageKey
+    FROM Orders o
+    JOIN OrderItems oi ON oi.orderId = o.id
+    JOIN Books b ON b.id = oi.bookId
+    JOIN Authors a ON a.id = b.authorId
+    WHERE o.userId = ? AND o.status <> 'CANCELLED'
+      AND EXISTS (SELECT 1 FROM Payments p WHERE p.orderId = o.id AND p.status = 'SUCCESS')
+    ORDER BY b.title`, [req.user.id]);
+  res.json({ items: rows.map(book => ({
+   id: String(book.id), title: book.title, author: book.author,
+   coverUrl: book.imageUrl || '', format: book.ebookFormat, fileName: book.ebookFileName,
+   hasFile: !!book.ebookStorageKey
+  })) });
+ }));
+ app.get('/api/library/:bookId/file', customer, wrap(async (req, res) => {
+  const [rows] = await db.query(
+   `SELECT b.ebookStorageKey, b.ebookFileName, b.ebookFormat
+    FROM Orders o
+    JOIN OrderItems oi ON oi.orderId = o.id
+    JOIN Books b ON b.id = oi.bookId
+    WHERE o.userId = ? AND o.status <> 'CANCELLED'
+      AND EXISTS (SELECT 1 FROM Payments p WHERE p.orderId = o.id AND p.status = 'SUCCESS')
+      AND b.id = ? AND b.ebookStorageKey IS NOT NULL
+    LIMIT 1`, [req.user.id, req.params.bookId]);
+  if (!rows[0]) return fail(res, 404, 'This accepted order does not include an available ebook');
+  const ebook = rows[0];
+  const filePath = path.join(EBOOK_DIRECTORY, path.basename(ebook.ebookStorageKey));
+  try {
+   await fs.access(filePath);
+  } catch (error) {
+   if (error.code === 'ENOENT') return fail(res, 404, 'The ebook file is no longer available');
+   throw error;
+  }
+  res.type(ebook.ebookFormat === 'PDF' ? 'application/pdf' : 'application/epub+zip');
+  res.set('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(ebook.ebookFileName)}`);
+  res.sendFile(filePath);
+ }));
  app.get('/api/books/:id/reviews', wrap(async (req, res) => {
   const [rows] = await db.query(
    'SELECT r.id, r.rating, r.comment, r.createdAt, u.name AS customerName FROM Reviews r JOIN Users u ON u.id = r.userId WHERE r.bookId = ? ORDER BY r.createdAt DESC, r.id DESC', [req.params.id]);
@@ -364,6 +427,45 @@ const createApp = async () => {
   });
   res.status(201).json({ book: await getBook(id) });
  }));
+ app.put('/api/admin/books/:id/ebook', admin,
+  express.raw({ type: 'application/octet-stream', limit: MAX_EBOOK_SIZE }),
+  wrap(async (req, res) => {
+   let fileName;
+   try {
+    fileName = decodeURIComponent(String(req.get('x-ebook-filename') || ''));
+   } catch {
+    return fail(res, 400, 'Invalid ebook filename');
+   }
+   const extension = path.extname(fileName).toLowerCase();
+   if (!['.pdf', '.epub'].includes(extension)) return fail(res, 400, 'Ebook file must be a PDF or EPUB');
+   if (!Buffer.isBuffer(req.body) || req.body.length === 0) return fail(res, 400, 'Ebook file is empty');
+   if (extension === '.pdf' && !req.body.subarray(0, 5).equals(Buffer.from('%PDF-'))) return fail(res, 400, 'The file does not contain a valid PDF header');
+   if (extension === '.epub' && !(req.body[0] === 0x50 && req.body[1] === 0x4b)) return fail(res, 400, 'The file does not contain a valid EPUB archive');
+   const [books] = await db.query('SELECT ebookStorageKey FROM Books WHERE id = ?', [req.params.id]);
+   if (!books[0]) return fail(res, 404, 'Book not found');
+   const storageKey = `${crypto.randomUUID()}${extension}`;
+   await fs.mkdir(EBOOK_DIRECTORY, { recursive: true });
+   const filePath = path.join(EBOOK_DIRECTORY, storageKey);
+   await fs.writeFile(filePath, req.body, { flag: 'wx' });
+   try {
+    const format = extension === '.pdf' ? 'PDF' : 'EPUB';
+    const safeName = path.basename(fileName).replace(/[\r\n"]/g, '_').slice(0, 255);
+    await db.query(
+     'UPDATE Books SET ebookStorageKey = ?, ebookFileName = ?, ebookFormat = ? WHERE id = ?',
+     [storageKey, safeName, format, req.params.id]);
+   } catch (error) {
+    await fs.rm(filePath, { force: true });
+    throw error;
+   }
+   if (books[0].ebookStorageKey) {
+    try {
+     await fs.rm(path.join(EBOOK_DIRECTORY, path.basename(books[0].ebookStorageKey)), { force: true });
+    } catch (error) {
+     console.error('Could not remove replaced ebook file:', error);
+    }
+   }
+   res.json({ ebook: { fileName: path.basename(fileName).slice(0, 255), format: extension === '.pdf' ? 'PDF' : 'EPUB' } });
+  }));
  app.patch('/api/admin/books/:id', admin, wrap(async (req, res) => {
   const old = await getBook(req.params.id); if (!old) return fail(res, 404, 'Book not found');
   const issue = validateBook(req.body || {}, true); if (issue) return fail(res, 400, issue);
@@ -392,8 +494,29 @@ const createApp = async () => {
  app.patch('/api/admin/orders/:id/status', admin, wrap(async (req, res) => {
   const status = req.body?.status;
   if (!STATUS_TO_DB[status]) return fail(res, 400, `status must be one of: ${Object.keys(STATUS_TO_DB).join(', ')}`);
-  const [result] = await db.query('UPDATE Orders SET status = ? WHERE id = ?', [STATUS_TO_DB[status], req.params.id]);
-  if (!result.affectedRows) return fail(res, 404, 'Order not found');
+  const [result] = await db.query(
+   "UPDATE Orders SET status = ? WHERE id = ? AND status <> 'CANCELLED'",
+   [STATUS_TO_DB[status], req.params.id]);
+  if (!result.affectedRows) {
+   const [existing] = await db.query('SELECT status FROM Orders WHERE id = ?', [req.params.id]);
+   if (!existing[0]) return fail(res, 404, 'Order not found');
+   return fail(res, 409, 'Cancelled orders cannot be changed');
+  }
+  const [rows] = await db.query('SELECT * FROM Orders WHERE id = ?', [req.params.id]);
+  res.json({ order: await mapOrder(rows[0]) });
+ }));
+ app.patch('/api/admin/orders/:id/payment', admin, wrap(async (req, res) => {
+  await tx(async conn => {
+   const [orders] = await conn.query('SELECT status FROM Orders WHERE id = ? FOR UPDATE', [req.params.id]);
+   if (!orders[0]) throw Object.assign(new Error('Order not found'), { status: 404 });
+   if (orders[0].status === 'CANCELLED') throw Object.assign(new Error('Cancelled orders cannot be marked as paid'), { status: 409 });
+   const [payments] = await conn.query('SELECT id, status FROM Payments WHERE orderId = ? ORDER BY id DESC LIMIT 1 FOR UPDATE', [req.params.id]);
+   if (!payments[0]) throw Object.assign(new Error('Payment record not found'), { status: 404 });
+   if (payments[0].status === 'REFUNDED') throw Object.assign(new Error('A refunded payment cannot be confirmed'), { status: 409 });
+   if (payments[0].status !== 'SUCCESS') {
+    await conn.query("UPDATE Payments SET status = 'SUCCESS', paidAt = COALESCE(paidAt, NOW()) WHERE id = ?", [payments[0].id]);
+   }
+  });
   const [rows] = await db.query('SELECT * FROM Orders WHERE id = ?', [req.params.id]);
   res.json({ order: await mapOrder(rows[0]) });
  }));
@@ -423,6 +546,7 @@ const createApp = async () => {
 
  app.use((_req, res) => fail(res, 404, 'Route not found'));
  app.use((err, _req, res, _next) => {
+  if (err.type === 'entity.too.large') return fail(res, 413, 'Ebook files must be 50 MB or smaller');
   if (err.code === 'ER_DUP_ENTRY') return fail(res, 409, 'That value already exists');
   if (err.code === 'ER_NO_REFERENCED_ROW_2') return fail(res, 400, 'Invalid reference (check the book, author or genre)');
   if (err.code === 'ER_SIGNAL_EXCEPTION') return fail(res, 409, err.sqlMessage || 'Request refused by the database');

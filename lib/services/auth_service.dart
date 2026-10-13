@@ -1,5 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../core/constants/api_constants.dart';
 
 class AuthService {
@@ -8,6 +12,8 @@ class AuthService {
   AuthService._internal();
 
   static final AuthService _instance = AuthService._internal();
+  static const String _tokenKey = 'shelfspace_auth_token';
+  static const String _userKey = 'shelfspace_auth_user';
 
   final String _baseUrl = ApiConstants.baseUrl;
 
@@ -17,6 +23,59 @@ class AuthService {
   String? get token => _token;
   Map<String, dynamic>? get currentUser => _currentUser;
   bool get isAuthenticated => _token != null;
+
+  Future<void> restoreSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedToken = prefs.getString(_tokenKey);
+
+    if (savedToken == null || savedToken.isEmpty) {
+      _token = null;
+      _currentUser = null;
+      return;
+    }
+
+    _token = savedToken;
+
+    final savedUser = prefs.getString(_userKey);
+    if (savedUser != null && savedUser.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(savedUser);
+        if (decoded is Map<String, dynamic>) {
+          _currentUser = decoded;
+        } else if (decoded is Map) {
+          _currentUser = Map<String, dynamic>.from(decoded);
+        }
+      } catch (_) {
+        _currentUser = null;
+      }
+    }
+  }
+
+  Future<void> persistSession({
+    required String token,
+    required Map<String, dynamic> user,
+    bool rememberMe = true,
+  }) async {
+    _token = token;
+    _currentUser = user;
+
+    if (!rememberMe) {
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_tokenKey, token);
+    await prefs.setString(_userKey, jsonEncode(user));
+  }
+
+  Future<void> clearSession() async {
+    _token = null;
+    _currentUser = null;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_tokenKey);
+    await prefs.remove(_userKey);
+  }
   
   Future<Map<String, dynamic>> register({
     required String name,
@@ -55,6 +114,7 @@ class AuthService {
   Future<Map<String, dynamic>> login({
     required String email,
     required String password,
+    bool rememberMe = true,
   }) async {
     try {
       final response = await http.post(
@@ -69,9 +129,14 @@ class AuthService {
       final data = jsonDecode(response.body);
       
       if (response.statusCode == 200) {
-        _token = data['token'];
-        _currentUser = data['user'];
-        return {'success': true, 'user': data['user'], 'token': data['token']};
+        final token = data['token'];
+        final user = data['user'];
+        await persistSession(
+          token: token,
+          user: Map<String, dynamic>.from(user),
+          rememberMe: rememberMe,
+        );
+        return {'success': true, 'user': user, 'token': token};
       } else {
         return {
           'success': false,
@@ -271,7 +336,10 @@ class AuthService {
     }
   }
 
-  Future<Map<String, dynamic>> googleLogin({required String idToken}) async {
+  Future<Map<String, dynamic>> googleLogin({
+    required String idToken,
+    bool rememberMe = true,
+  }) async {
     try {
       final response = await http.post(
         Uri.parse('$_baseUrl${ApiConstants.google}'),
@@ -282,9 +350,14 @@ class AuthService {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        _token = data['token'];
-        _currentUser = data['user'];
-        return {'success': true, 'user': data['user'], 'token': data['token']};
+        final token = data['token'];
+        final user = data['user'];
+        await persistSession(
+          token: token,
+          user: Map<String, dynamic>.from(user),
+          rememberMe: rememberMe,
+        );
+        return {'success': true, 'user': user, 'token': token};
       } else {
         return {'success': false, 'error': data['error'] ?? 'Google sign-in failed'};
       }
@@ -294,7 +367,6 @@ class AuthService {
   }
 
   void logout() {
-    _token = null;
-    _currentUser = null;
+    unawaited(clearSession());
   }
 }

@@ -23,6 +23,8 @@ class Order {
   final String address;
   final String city;
   final String paymentMethod;
+  final String? paymentStatus;
+  String get displayPaymentStatus => paymentStatus ?? 'Pending';
   final DateTime createdAt;
   final String status;
 
@@ -37,6 +39,7 @@ class Order {
     required this.address,
     required this.city,
     required this.paymentMethod,
+    this.paymentStatus = 'Pending',
     required this.createdAt,
     this.status = 'Processing',
   });
@@ -52,6 +55,7 @@ class Order {
     String? address,
     String? city,
     String? paymentMethod,
+    String? paymentStatus,
     DateTime? createdAt,
     String? status,
   }) {
@@ -66,6 +70,7 @@ class Order {
       address: address ?? this.address,
       city: city ?? this.city,
       paymentMethod: paymentMethod ?? this.paymentMethod,
+      paymentStatus: paymentStatus ?? this.paymentStatus,
       createdAt: createdAt ?? this.createdAt,
       status: status ?? this.status,
     );

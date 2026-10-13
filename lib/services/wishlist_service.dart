@@ -53,7 +53,7 @@ class WishlistService extends ChangeNotifier {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         final items = (data['items'] as List?) ?? [];
-        
+
         _items.clear();
         for (final item in items) {
           final bookData = item as Map<String, dynamic>;

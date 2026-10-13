@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'core/theme/app_theme.dart';
+import 'core/theme/app_theme_controller.dart';
 import 'profile_orders/data/profile_orders_repository.dart';
 import 'profile_orders/data/profile_orders_repository_impl.dart';
 import 'profile_orders/providers/orders_provider.dart';
 import 'profile_orders/providers/profile_provider.dart';
-import 'core/theme/app_theme_controller.dart';
 import 'screens/splash/splash_screen.dart';
+import 'services/auth_service.dart';
 import 'services/google_auth_service.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AuthService().restoreSession();
   await GoogleAuthService.instance.init();
   runApp(const ShelfSpaceApp());
 }

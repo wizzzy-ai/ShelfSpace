@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/theme/app_theme_controller.dart';
+import 'help_support_screen.dart';
+import 'legal_document_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -359,11 +361,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: 'Help & Support',
                 subtitle: 'Get help with ShelfSpace',
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Help & Support will be connected later.',
-                      ),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => const HelpSupportScreen(),
                     ),
                   );
                 },
@@ -374,11 +375,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: 'Terms & Conditions',
                 subtitle: 'Read our terms',
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Terms & Conditions will be connected later.',
-                      ),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => const LegalDocumentScreen.terms(),
                     ),
                   );
                 },
@@ -389,11 +389,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: 'Privacy Policy',
                 subtitle: 'Read our privacy policy',
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Privacy Policy will be connected later.',
-                      ),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => const LegalDocumentScreen.privacy(),
                     ),
                   );
                 },

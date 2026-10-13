@@ -1,13 +1,18 @@
 import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:http/http.dart' as http;
+
 import '../models/book.dart';
 import '../core/constants/api_constants.dart';
+import 'auth_service.dart';
 
 class BookService {
   BookService({http.Client? client}) : _client = client ?? http.Client();
 
   final http.Client _client;
   final String _baseUrl = ApiConstants.baseUrl;
+  final AuthService _authService = AuthService();
 
   /// Fetch books from backend API
   /// [query] - Search query (optional)
@@ -42,9 +47,10 @@ class BookService {
         },
       );
 
-      final response = await _client.get(uri, headers: {
-        'Accept': 'application/json',
-      });
+      final response = await _client.get(
+        uri,
+        headers: {'Accept': 'application/json'},
+      );
 
       if (response.statusCode != 200) {
         throw BookServiceException(
@@ -64,13 +70,49 @@ class BookService {
     }
   }
 
+  Future<void> uploadEbook({
+    required String bookId,
+    required String fileName,
+    required Uint8List bytes,
+  }) async {
+    final token = _authService.token;
+    if (token == null) {
+      throw BookServiceException('Sign in as an admin to upload ebooks');
+    }
+
+    final request =
+        http.Request(
+            'PUT',
+            Uri.parse('$_baseUrl${ApiConstants.adminBooks}/$bookId/ebook'),
+          )
+          ..headers.addAll({
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/octet-stream',
+            'X-Ebook-Filename': Uri.encodeComponent(fileName),
+          })
+          ..bodyBytes = bytes;
+
+    final response = await http.Response.fromStream(
+      await _client.send(request),
+    );
+    if (response.statusCode != 200) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      throw BookServiceException(
+        data['error'] as String? ?? 'Failed to upload ebook',
+        statusCode: response.statusCode,
+      );
+    }
+  }
+
   /// Fetch book details by ID
   Future<Book> fetchBookDetails(String id) async {
     try {
       final uri = Uri.parse('$_baseUrl${ApiConstants.books}/$id');
-      final response = await _client.get(uri, headers: {
-        'Accept': 'application/json',
-      });
+      final response = await _client.get(
+        uri,
+        headers: {'Accept': 'application/json'},
+      );
 
       if (response.statusCode != 200) {
         throw BookServiceException(
@@ -90,9 +132,10 @@ class BookService {
   Future<List<Map<String, dynamic>>> fetchBookReviews(String id) async {
     try {
       final uri = Uri.parse('$_baseUrl${ApiConstants.bookReviews}/$id/reviews');
-      final response = await _client.get(uri, headers: {
-        'Accept': 'application/json',
-      });
+      final response = await _client.get(
+        uri,
+        headers: {'Accept': 'application/json'},
+      );
 
       if (response.statusCode != 200) {
         throw BookServiceException(
@@ -161,9 +204,10 @@ class BookService {
       title: json['title'] as String? ?? 'Untitled',
       author: json['author'] as String? ?? 'Unknown Author',
       genre: json['genre'] as String? ?? 'Fiction',
-      description: json['description'] as String? ?? 'No description available.',
-      coverUrl: json['coverUrl'] as String? ?? 
-                 'https://via.placeholder.com/150',
+      description:
+          json['description'] as String? ?? 'No description available.',
+      coverUrl:
+          json['coverUrl'] as String? ?? 'https://via.placeholder.com/150',
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
       stock: (json['stock'] as num?)?.toInt() ?? 0,
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
@@ -171,6 +215,8 @@ class BookService {
       isBestseller: json['isBestseller'] as bool? ?? false,
       isNewArrival: json['isNewArrival'] as bool? ?? false,
       isFeatured: json['isFeatured'] as bool? ?? false,
+      hasEbook: json['hasEbook'] as bool? ?? false,
+      ebookFormat: json['ebookFormat'] as String?,
     );
   }
 }

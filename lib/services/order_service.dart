@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
@@ -24,6 +25,82 @@ class OrderService extends ChangeNotifier {
   List<Order> get orders => List.unmodifiable(_orders);
   bool get isLoading => _isLoading;
   String? get error => _error;
+
+  Future<void> loadCustomerOrders() async {
+    final token = _authService.token;
+    if (token == null) {
+      _error = 'Sign in to view your orders.';
+      notifyListeners();
+      return;
+    }
+
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      final response = await _client.get(
+        Uri.parse('$_baseUrl${ApiConstants.orders}'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode != 200) {
+        throw Exception(data['error'] ?? 'Failed to load your orders');
+      }
+      final items = (data['items'] as List?) ?? [];
+      _orders
+        ..clear()
+        ..addAll(
+          items.map((item) => _parseOrder(item as Map<String, dynamic>)),
+        );
+    } catch (e) {
+      _error = 'Failed to load your orders: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadAdminOrders() async {
+    await Future<void>.delayed(Duration.zero);
+
+    final token = _authService.token;
+    if (token == null) {
+      _error =
+          'Your admin session is no longer active. Sign in again, then retry.';
+      notifyListeners();
+      return;
+    }
+
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      final response = await _client.get(
+        Uri.parse('$_baseUrl${ApiConstants.adminOrders}'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode != 200) {
+        if (response.statusCode == 401) {
+          _authService.logout();
+          _error = 'Your admin session is no longer active. Sign in again, then retry.';
+          return;
+        }
+        throw Exception(data['error'] ?? 'Failed to load orders');
+      }
+      final items = (data['items'] as List?) ?? [];
+      _orders
+        ..clear()
+        ..addAll(
+          items.map((item) => _parseOrder(item as Map<String, dynamic>)),
+        );
+    } catch (e) {
+      _error = 'Failed to load orders: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 
   Future<bool> createOrder({
     required String customerName,
@@ -68,13 +145,13 @@ class OrderService extends ChangeNotifier {
       if (response.statusCode == 201) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         final orderData = data['order'] as Map<String, dynamic>;
-        
+
         final order = _parseOrder(orderData);
         _orders.insert(0, order);
-        
+
         // Clear cart after successful order
         await cart.clear();
-        
+
         return true;
       } else {
         final data = jsonDecode(response.body);
@@ -101,14 +178,93 @@ class OrderService extends ChangeNotifier {
   }
 
   Future<bool> updateOrderStatus(String id, String status) async {
-    // This would be an admin function, not available to regular users
-    // For now, just update locally
-    final index = _orders.indexWhere((order) => order.id == id);
-    if (index == -1) return false;
+    final token = _authService.token;
+    if (token == null) {
+      _error = 'Sign in as an admin to update orders';
+      notifyListeners();
+      return false;
+    }
 
-    _orders[index] = _orders[index].copyWith(status: status);
-    notifyListeners();
-    return true;
+    final index = _orders.indexWhere((order) => order.id == id);
+    if (index == -1) {
+      _error = 'Order is no longer in the list. Refresh and try again.';
+      notifyListeners();
+      return false;
+    }
+
+    try {
+      final response = await _client.patch(
+        Uri.parse('$_baseUrl${ApiConstants.adminOrders}/$id/status'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'status': status}),
+      );
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode != 200) {
+        if (response.statusCode == 401) {
+          _authService.logout();
+          _error = 'Your admin session is no longer active. Sign in again, then retry.';
+          notifyListeners();
+          return false;
+        }
+        throw Exception(data['error'] ?? 'Failed to update order');
+      }
+      _orders[index] = _parseOrder(data['order'] as Map<String, dynamic>);
+      _error = null;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = 'Failed to update order: $e';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> confirmPayment(String id) async {
+    final token = _authService.token;
+    if (token == null) {
+      _error =
+          'Your admin session is no longer active. Sign in again, then retry.';
+      notifyListeners();
+      return false;
+    }
+
+    final index = _orders.indexWhere((order) => order.id == id);
+    if (index == -1) {
+      _error = 'Order is no longer in the list. Refresh and try again.';
+      notifyListeners();
+      return false;
+    }
+
+    try {
+      final response = await _client.patch(
+        Uri.parse('$_baseUrl${ApiConstants.adminOrders}/$id/payment'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': '******',
+        },
+      );
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode != 200) {
+        if (response.statusCode == 401) {
+          _authService.logout();
+          _error = 'Your admin session is no longer active. Sign in again, then retry.';
+          notifyListeners();
+          return false;
+        }
+        throw Exception(data['error'] ?? 'Failed to confirm payment');
+      }
+      _orders[index] = _parseOrder(data['order'] as Map<String, dynamic>);
+      _error = null;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = 'Failed to confirm payment: $e';
+      notifyListeners();
+      return false;
+    }
   }
 
   void clearOrders() {
@@ -149,7 +305,10 @@ class OrderService extends ChangeNotifier {
       address: json['address'] as String? ?? '',
       city: json['city'] as String? ?? '',
       paymentMethod: json['paymentMethod'] as String? ?? '',
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
+      paymentStatus: json['paymentStatus'] as String? ?? 'Pending',
+      createdAt:
+          DateTime.tryParse(json['createdAt'] as String? ?? '') ??
+          DateTime.now(),
       status: json['status'] as String? ?? 'Processing',
     );
   }

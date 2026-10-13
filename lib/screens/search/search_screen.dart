@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
@@ -18,10 +20,7 @@ class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   final BookService _bookService = BookService();
 
-  final List<String> _recentSearches = [
-    'Atomic Habits',
-    'The Silent Patient',
-  ];
+  final List<String> _recentSearches = ['Atomic Habits', 'The Silent Patient'];
 
   final List<String> _popularSearches = [
     'Fiction',
@@ -36,18 +35,20 @@ class _SearchScreenState extends State<SearchScreen> {
   double _minRating = 0;
   String _sortBy = 'Popularity';
   List<Book> _allBooks = [];
+  List<Book>? _searchResults;
+  String? _searchError;
   bool _isLoading = false;
+  bool _isSearchLoading = false;
+  Timer? _searchDebounce;
+  int _searchRequestId = 0;
 
-  bool get _hasSearch =>
-      _searchController.text.trim().isNotEmpty;
+  bool get _hasSearch => _searchController.text.trim().isNotEmpty;
 
   @override
   void initState() {
     super.initState();
     _loadBooks();
-    _searchController.addListener(() {
-      setState(() {});
-    });
+    _searchController.addListener(_onSearchChanged);
   }
 
   Future<void> _loadBooks() async {
@@ -72,57 +73,47 @@ class _SearchScreenState extends State<SearchScreen> {
   List<Book> get _filteredBooks {
     final query = _searchController.text.trim().toLowerCase();
 
-    List<Book> results = _allBooks.where((book) {
-      final matchesSearch = query.isEmpty ||
+    List<Book> results = (_searchResults ?? _allBooks).where((book) {
+      final matchesSearch =
+          query.isEmpty ||
           book.title.toLowerCase().contains(query) ||
           book.author.toLowerCase().contains(query) ||
           book.genre.toLowerCase().contains(query) ||
           book.description.toLowerCase().contains(query);
 
-      final matchesGenre = _selectedGenre == 'All' ||
-          book.genre.toLowerCase() ==
-              _selectedGenre.toLowerCase();
+      final matchesGenre =
+          _selectedGenre == 'All' ||
+          book.genre.toLowerCase() == _selectedGenre.toLowerCase();
 
       final matchesPrice = book.price <= _maxPrice;
 
       final matchesRating = book.rating >= _minRating;
 
-      return matchesSearch &&
-          matchesGenre &&
-          matchesPrice &&
-          matchesRating;
+      return matchesSearch && matchesGenre && matchesPrice && matchesRating;
     }).toList();
 
     switch (_sortBy) {
       case 'Price: Low → High':
-        results.sort(
-          (a, b) => a.price.compareTo(b.price),
-        );
+        results.sort((a, b) => a.price.compareTo(b.price));
         break;
 
       case 'Price: High → Low':
-        results.sort(
-          (a, b) => b.price.compareTo(a.price),
-        );
+        results.sort((a, b) => b.price.compareTo(a.price));
         break;
 
       case 'Newest':
-        results.sort(
-          (a, b) {
-            if (a.isNewArrival == b.isNewArrival) {
-              return 0;
-            }
+        results.sort((a, b) {
+          if (a.isNewArrival == b.isNewArrival) {
+            return 0;
+          }
 
-            return a.isNewArrival ? -1 : 1;
-          },
-        );
+          return a.isNewArrival ? -1 : 1;
+        });
         break;
 
       case 'Popularity':
       default:
-        results.sort(
-          (a, b) => b.reviewCount.compareTo(a.reviewCount),
-        );
+        results.sort((a, b) => b.reviewCount.compareTo(a.reviewCount));
         break;
     }
 
@@ -153,8 +144,52 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged() {
+    final query = _searchController.text.trim();
+    _searchDebounce?.cancel();
+    final requestId = ++_searchRequestId;
+
+    setState(() {
+      _searchError = null;
+      _searchResults = query.isEmpty ? null : [];
+      _isSearchLoading = query.isNotEmpty;
+    });
+
+    if (query.isEmpty) {
+      return;
+    }
+
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+      _fetchSearchResults(query, requestId);
+    });
+  }
+
+  Future<void> _fetchSearchResults(String query, int requestId) async {
+    try {
+      final results = await _bookService.searchBooks(query, limit: 100);
+      if (!mounted || requestId != _searchRequestId) {
+        return;
+      }
+
+      setState(() {
+        _searchResults = results;
+        _isSearchLoading = false;
+      });
+    } catch (error) {
+      if (!mounted || requestId != _searchRequestId) {
+        return;
+      }
+
+      setState(() {
+        _searchError = error.toString();
+        _isSearchLoading = false;
+      });
+    }
   }
 
   void _performSearch(String value) {
@@ -180,9 +215,7 @@ class _SearchScreenState extends State<SearchScreen> {
   void _useSearch(String value) {
     _searchController.text = value;
     _searchController.selection = TextSelection.fromPosition(
-      TextPosition(
-        offset: _searchController.text.length,
-      ),
+      TextPosition(offset: _searchController.text.length),
     );
 
     _performSearch(value);
@@ -208,16 +241,10 @@ class _SearchScreenState extends State<SearchScreen> {
           builder: (context, setSheetState) {
             return SafeArea(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  20,
-                  16,
-                  20,
-                  24,
-                ),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
                 child: SingleChildScrollView(
                   child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Center(
                         child: Container(
@@ -225,8 +252,7 @@ class _SearchScreenState extends State<SearchScreen> {
                           height: 4,
                           decoration: BoxDecoration(
                             color: Theme.of(context).colorScheme.outlineVariant,
-                            borderRadius:
-                                BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
                       ),
@@ -236,12 +262,8 @@ class _SearchScreenState extends State<SearchScreen> {
                           Expanded(
                             child: Text(
                               'Filters & Sort',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                           ),
                           TextButton(
@@ -255,10 +277,7 @@ class _SearchScreenState extends State<SearchScreen> {
                             },
                             child: const Text(
                               'Reset',
-                              style: TextStyle(
-                                color:
-                                    AppColors.burgundy,
-                              ),
+                              style: TextStyle(color: AppColors.burgundy),
                             ),
                           ),
                         ],
@@ -266,62 +285,58 @@ class _SearchScreenState extends State<SearchScreen> {
                       const SizedBox(height: 22),
                       const Text(
                         'Genre',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 10),
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: [
-                          'All',
-                          'Fiction',
-                          'Romance',
-                          'Thriller',
-                          'Mystery',
-                          'Classic',
-                          'Self Development',
-                          'Lifestyle',
-                        ].map((genre) {
-                          final selected =
-                              tempGenre == genre;
+                        children:
+                            [
+                              'All',
+                              'Fiction',
+                              'Romance',
+                              'Thriller',
+                              'Mystery',
+                              'Classic',
+                              'Self Development',
+                              'Lifestyle',
+                            ].map((genre) {
+                              final selected = tempGenre == genre;
 
-                          return ChoiceChip(
-                            label: Text(genre),
-                            selected: selected,
-                            onSelected: (_) {
-                              setSheetState(() {
-                                tempGenre = genre;
-                              });
-                            },
-                            selectedColor:
-                                AppColors.burgundy
-                                    .withValues(
-                              alpha: 0.10,
-                            ),
-                            side: BorderSide(
-                              color: selected
-                                  ? AppColors.burgundy
-                                  : Theme.of(context).colorScheme.outlineVariant,
-                            ),
-                            labelStyle: TextStyle(
-                              color: selected
-                                  ? AppColors.burgundy
-                                  : Theme.of(context).colorScheme.onSurface,
-                              fontWeight: selected
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
-                            ),
-                          );
-                        }).toList(),
+                              return ChoiceChip(
+                                label: Text(genre),
+                                selected: selected,
+                                onSelected: (_) {
+                                  setSheetState(() {
+                                    tempGenre = genre;
+                                  });
+                                },
+                                selectedColor: AppColors.burgundy.withValues(
+                                  alpha: 0.10,
+                                ),
+                                side: BorderSide(
+                                  color: selected
+                                      ? AppColors.burgundy
+                                      : Theme.of(context)
+                                            .colorScheme
+                                            .outlineVariant,
+                                ),
+                                labelStyle: TextStyle(
+                                  color: selected
+                                      ? AppColors.burgundy
+                                      : Theme.of(context).colorScheme.onSurface,
+                                  fontWeight: selected
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                                ),
+                              );
+                            }).toList(),
                       ),
                       const SizedBox(height: 24),
                       const Text(
                         'Maximum Price',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       Text(
@@ -336,10 +351,10 @@ class _SearchScreenState extends State<SearchScreen> {
                         min: 0,
                         max: 10000,
                         divisions: 20,
-                        activeColor:
-                            AppColors.burgundy,
-                        inactiveColor:
-                            Theme.of(context).colorScheme.outlineVariant,
+                        activeColor: AppColors.burgundy,
+                        inactiveColor: Theme.of(context)
+                            .colorScheme
+                            .outlineVariant,
                         onChanged: (value) {
                           setSheetState(() {
                             tempMaxPrice = value;
@@ -349,17 +364,13 @@ class _SearchScreenState extends State<SearchScreen> {
                       const SizedBox(height: 18),
                       const Text(
                         'Minimum Rating',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 10),
                       Wrap(
                         spacing: 8,
-                        children: [0.0, 3.0, 4.0, 4.5]
-                            .map((rating) {
-                          final selected =
-                              tempMinRating == rating;
+                        children: [0.0, 3.0, 4.0, 4.5].map((rating) {
+                          final selected = tempMinRating == rating;
 
                           return ChoiceChip(
                             label: Text(
@@ -373,15 +384,15 @@ class _SearchScreenState extends State<SearchScreen> {
                                 tempMinRating = rating;
                               });
                             },
-                            selectedColor:
-                                AppColors.burgundy
-                                    .withValues(
+                            selectedColor: AppColors.burgundy.withValues(
                               alpha: 0.10,
                             ),
                             side: BorderSide(
                               color: selected
                                   ? AppColors.burgundy
-                                  : Theme.of(context).colorScheme.outlineVariant,
+                                  : Theme.of(context)
+                                        .colorScheme
+                                        .outlineVariant,
                             ),
                             labelStyle: TextStyle(
                               color: selected
@@ -394,17 +405,13 @@ class _SearchScreenState extends State<SearchScreen> {
                       const SizedBox(height: 24),
                       const Text(
                         'Sort By',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 10),
                       DropdownButtonFormField<String>(
                         initialValue: tempSortBy,
                         decoration: const InputDecoration(
-                          prefixIcon: Icon(
-                            Icons.sort_rounded,
-                          ),
+                          prefixIcon: Icon(Icons.sort_rounded),
                         ),
                         items: const [
                           DropdownMenuItem(
@@ -413,13 +420,11 @@ class _SearchScreenState extends State<SearchScreen> {
                           ),
                           DropdownMenuItem(
                             value: 'Price: Low → High',
-                            child:
-                                Text('Price: Low → High'),
+                            child: Text('Price: Low → High'),
                           ),
                           DropdownMenuItem(
                             value: 'Price: High → Low',
-                            child:
-                                Text('Price: High → Low'),
+                            child: Text('Price: High → Low'),
                           ),
                           DropdownMenuItem(
                             value: 'Newest',
@@ -451,9 +456,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
                             Navigator.pop(sheetContext);
                           },
-                          child: const Text(
-                            'Apply Filters',
-                          ),
+                          child: const Text('Apply Filters'),
                         ),
                       ),
                     ],
@@ -474,9 +477,7 @@ class _SearchScreenState extends State<SearchScreen> {
         builder: (_) => BookDetailsScreen(
           book: book,
           similarBooks: _allBooks
-              .where(
-                (item) => item.id != book.id,
-              )
+              .where((item) => item.id != book.id)
               .take(3)
               .toList(),
         ),
@@ -516,15 +517,8 @@ class _SearchScreenState extends State<SearchScreen> {
         child: CustomScrollView(
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(
-                20,
-                8,
-                20,
-                0,
-              ),
-              sliver: SliverToBoxAdapter(
-                child: _buildSearchField(),
-              ),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+              sliver: SliverToBoxAdapter(child: _buildSearchField()),
             ),
             if (!_hasSearch) ...[
               SliverToBoxAdapter(
@@ -541,18 +535,11 @@ class _SearchScreenState extends State<SearchScreen> {
                   icon: Icons.trending_up_rounded,
                 ),
               ),
-              SliverToBoxAdapter(
-                child: _buildBrowseGenres(),
-              ),
+              SliverToBoxAdapter(child: _buildBrowseGenres()),
             ],
             if (_hasSearch) ...[
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(
-                  20,
-                  20,
-                  20,
-                  12,
-                ),
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
                 sliver: SliverToBoxAdapter(
                   child: Row(
                     children: [
@@ -567,16 +554,13 @@ class _SearchScreenState extends State<SearchScreen> {
                       ),
                       if (_activeFilterCount > 0)
                         Container(
-                          padding:
-                              const EdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(
                             horizontal: 8,
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color:
-                                AppColors.burgundy,
-                            borderRadius:
-                                BorderRadius.circular(8),
+                            color: AppColors.burgundy,
+                            borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             '$_activeFilterCount',
@@ -591,18 +575,25 @@ class _SearchScreenState extends State<SearchScreen> {
                       IconButton(
                         onPressed: _showFilters,
                         tooltip: 'Filters',
-                        icon: const Icon(
-                          Icons.tune_rounded,
-                        ),
+                        icon: const Icon(Icons.tune_rounded),
                       ),
                     ],
                   ),
                 ),
               ),
-              if (_isLoading && books.isEmpty)
+              if ((_isLoading && !_hasSearch) || _isSearchLoading)
                 const SliverFillRemaining(
                   hasScrollBody: false,
                   child: Center(child: CircularProgressIndicator()),
+                )
+              else if (_searchError != null)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: AppErrorView(
+                    title: 'Search unavailable',
+                    message: _searchError!,
+                    onRetry: _onSearchChanged,
+                  ),
                 )
               else if (books.isEmpty)
                 const SliverFillRemaining(
@@ -610,40 +601,31 @@ class _SearchScreenState extends State<SearchScreen> {
                   child: AppEmptyView(
                     icon: Icons.search_off_rounded,
                     title: 'No books found',
-                    message:
-                        'Try a different title, author, genre, or adjust your filters.',
+                    message: 'Try a different title, author, genre, or adjust your filters.',
                   ),
                 )
               else
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(
-                    20,
-                    0,
-                    20,
-                    30,
-                  ),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
                   sliver: SliverGrid(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final book = books[index];
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final book = books[index];
 
-                        return BookCard(
-                          book: book,
-                          fillWidth: true,
-                          onTap: () {
-                            _openBook(book);
-                          },
-                        );
-                      },
-                      childCount: books.length,
-                    ),
+                      return BookCard(
+                        book: book,
+                        fillWidth: true,
+                        onTap: () {
+                          _openBook(book);
+                        },
+                      );
+                    }, childCount: books.length),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 14,
-                      mainAxisSpacing: 18,
-                      mainAxisExtent: 340,
-                    ),
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 14,
+                          mainAxisSpacing: 18,
+                          mainAxisExtent: 340,
+                        ),
                   ),
                 ),
             ],
@@ -658,9 +640,7 @@ class _SearchScreenState extends State<SearchScreen> {
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: AppColors.dark.withValues(
-              alpha: 0.04,
-            ),
+            color: AppColors.dark.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 5),
           ),
@@ -679,9 +659,7 @@ class _SearchScreenState extends State<SearchScreen> {
           suffixIcon: _hasSearch
               ? IconButton(
                   onPressed: _clearSearch,
-                  icon: const Icon(
-                    Icons.close_rounded,
-                  ),
+                  icon: const Icon(Icons.close_rounded),
                 )
               : null,
         ),
@@ -699,22 +677,13 @@ class _SearchScreenState extends State<SearchScreen> {
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        20,
-        26,
-        20,
-        0,
-      ),
+      padding: const EdgeInsets.fromLTRB(20, 26, 20, 0),
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           Wrap(
@@ -725,19 +694,13 @@ class _SearchScreenState extends State<SearchScreen> {
                 onPressed: () {
                   _useSearch(item);
                 },
-                avatar: Icon(
-                  icon,
-                  size: 16,
-                  color: AppColors.burgundy,
-                ),
+                avatar: Icon(icon, size: 16, color: AppColors.burgundy),
                 label: Text(item),
                 backgroundColor: Theme.of(context).colorScheme.surface,
                 side: BorderSide(
                   color: Theme.of(context).colorScheme.outlineVariant,
                 ),
-                labelStyle: const TextStyle(
-                  fontSize: 12,
-                ),
+                labelStyle: const TextStyle(fontSize: 12),
               );
             }).toList(),
           ),
@@ -757,45 +720,30 @@ class _SearchScreenState extends State<SearchScreen> {
     ];
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        20,
-        28,
-        20,
-        30,
-      ),
+      padding: const EdgeInsets.fromLTRB(20, 28, 20, 30),
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'Browse by Genre',
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           ...genres.map(
             (genre) => Padding(
-              padding: const EdgeInsets.only(
-                bottom: 10,
-              ),
+              padding: const EdgeInsets.only(bottom: 10),
               child: Material(
                 color: Theme.of(context).colorScheme.surface,
-                borderRadius:
-                    BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(14),
                 child: InkWell(
                   onTap: () {
                     _useSearch(genre.$1);
                   },
-                  borderRadius:
-                      BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(14),
                   child: Container(
-                    padding:
-                        const EdgeInsets.all(13),
+                    padding: const EdgeInsets.all(13),
                     decoration: BoxDecoration(
-                      borderRadius:
-                          BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(14),
                       border: Border.all(
                         color: Theme.of(context).colorScheme.outlineVariant,
                       ),
@@ -806,14 +754,8 @@ class _SearchScreenState extends State<SearchScreen> {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: AppColors.burgundy
-                                .withValues(
-                              alpha: 0.08,
-                            ),
-                            borderRadius:
-                                BorderRadius.circular(
-                              11,
-                            ),
+                            color: AppColors.burgundy.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(11),
                           ),
                           child: Icon(
                             genre.$2,
@@ -825,16 +767,12 @@ class _SearchScreenState extends State<SearchScreen> {
                         Expanded(
                           child: Text(
                             genre.$1,
-                            style: const TextStyle(
-                              fontWeight:
-                                  FontWeight.w600,
-                            ),
+                            style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ),
                         Icon(
                           Icons.chevron_right_rounded,
-                          color:
-                              Theme.of(context).colorScheme.onSurfaceVariant,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ],
                     ),

@@ -1,11 +1,40 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../models/library_book.dart';
 import '../../models/order.dart';
+import '../../services/library_service.dart';
 import '../../services/order_service.dart';
+import '../library/library_screen.dart';
 
-class OrdersScreen extends StatelessWidget {
+class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
+
+  @override
+  State<OrdersScreen> createState() => _OrdersScreenState();
+}
+
+class _OrdersScreenState extends State<OrdersScreen>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    OrderService.instance.loadCustomerOrders();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      OrderService.instance.loadCustomerOrders();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,30 +50,47 @@ class OrdersScreen extends StatelessWidget {
         builder: (context, _) {
           final orders = OrderService.instance.orders;
 
+          if (OrderService.instance.isLoading && orders.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (orders.isEmpty && OrderService.instance.error != null) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      OrderService.instance.error!,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton(
+                      onPressed: OrderService.instance.loadCustomerOrders,
+                      child: const Text('Try again'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
           if (orders.isEmpty) {
             return const _EmptyOrders();
           }
 
           return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(
-              16,
-              10,
-              16,
-              28,
-            ),
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
             itemCount: orders.length,
-            separatorBuilder: (_, _) =>
-                const SizedBox(height: 12),
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final order = orders[index];
 
               return _OrderCard(
                 order: order,
                 onTap: () {
-                  _showOrderDetails(
-                    context,
-                    order,
-                  );
+                  _showOrderDetails(context, order);
                 },
               );
             },
@@ -54,10 +100,7 @@ class OrdersScreen extends StatelessWidget {
     );
   }
 
-  void _showOrderDetails(
-    BuildContext context,
-    Order order,
-  ) {
+  void _showOrderDetails(BuildContext context, Order order) {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -66,9 +109,7 @@ class OrdersScreen extends StatelessWidget {
         return SafeArea(
           child: FractionallySizedBox(
             heightFactor: 0.92,
-            child: _OrderDetailsSheet(
-              order: order,
-            ),
+            child: _OrderDetailsSheet(order: order),
           ),
         );
       },
@@ -80,10 +121,7 @@ class _OrderCard extends StatelessWidget {
   final Order order;
   final VoidCallback onTap;
 
-  const _OrderCard({
-    required this.order,
-    required this.onTap,
-  });
+  const _OrderCard({required this.order, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -115,9 +153,7 @@ class _OrderCard extends StatelessWidget {
                     width: 46,
                     height: 46,
                     decoration: BoxDecoration(
-                      color: AppColors.burgundy.withValues(
-                        alpha: 0.08,
-                      ),
+                      color: AppColors.burgundy.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
@@ -128,8 +164,7 @@ class _OrderCard extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           order.id,
@@ -142,16 +177,16 @@ class _OrderCard extends StatelessWidget {
                         Text(
                           _formatDate(order.createdAt),
                           style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
                             fontSize: 11,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  _StatusBadge(
-                    status: order.status,
-                  ),
+                  _StatusBadge(status: order.status),
                 ],
               ),
 
@@ -206,24 +241,97 @@ class _OrderCard extends StatelessWidget {
   }
 }
 
-class _OrderDetailsSheet extends StatelessWidget {
+class _OrderDetailsSheet extends StatefulWidget {
   final Order order;
 
-  const _OrderDetailsSheet({
-    required this.order,
-  });
+  const _OrderDetailsSheet({required this.order});
+
+  @override
+  State<_OrderDetailsSheet> createState() => _OrderDetailsSheetState();
+}
+
+class _OrderDetailsSheetState extends State<_OrderDetailsSheet> {
+  final LibraryService _libraryService = LibraryService();
+  final Set<String> _busyBookIds = {};
+  Map<String, LibraryBook> _availableEbooks = {};
+  String? _ebookError;
+  bool _loadingEbooks = false;
+
+  Order get order => widget.order;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAvailableEbooks();
+  }
+
+  Future<void> _loadAvailableEbooks() async {
+    if (order.displayPaymentStatus != 'Paid' || order.status == 'Cancelled') {
+      return;
+    }
+
+    setState(() {
+      _loadingEbooks = true;
+      _ebookError = null;
+    });
+    try {
+      final library = await _libraryService.fetchLibrary();
+      if (!mounted) return;
+      final orderBookIds = order.items.map((item) => item.book.id).toSet();
+      setState(() {
+        _availableEbooks = {
+          for (final book in library)
+            if (orderBookIds.contains(book.id)) book.id: book,
+        };
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _ebookError = error.toString());
+    } finally {
+      if (mounted) setState(() => _loadingEbooks = false);
+    }
+  }
+
+  Future<void> _readBook(LibraryBook book) async {
+    setState(() => _busyBookIds.add(book.id));
+    try {
+      final bytes = await _libraryService.loadEbook(book);
+      if (!mounted) return;
+      await Navigator.of(context).push<void>(
+        MaterialPageRoute(
+          builder: (_) => EbookReaderScreen(book: book, bytes: bytes),
+        ),
+      );
+    } catch (error) {
+      if (mounted) _showMessage('Could not open ebook: $error');
+    } finally {
+      if (mounted) setState(() => _busyBookIds.remove(book.id));
+    }
+  }
+
+  Future<void> _downloadBook(LibraryBook book) async {
+    setState(() => _busyBookIds.add(book.id));
+    try {
+      await _libraryService.downloadToDevice(book);
+      if (mounted) _showMessage('Saved "${book.title}" to your device.');
+    } catch (error) {
+      if (mounted) _showMessage('$error');
+    } finally {
+      if (mounted) setState(() => _busyBookIds.remove(book.id));
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: Theme.of(context).colorScheme.surface,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(
-          20,
-          12,
-          20,
-          28,
-        ),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -245,17 +353,11 @@ class _OrderDetailsSheet extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'Order Details',
-                    style: Theme.of(context)
-                        .textTheme
-                        .headlineSmall
-                        ?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                    style: Theme.of(context).textTheme.headlineSmall
+                        ?.copyWith(fontWeight: FontWeight.bold),
                   ),
                 ),
-                _StatusBadge(
-                  status: order.status,
-                ),
+                _StatusBadge(status: order.status),
               ],
             ),
 
@@ -277,10 +379,7 @@ class _OrderDetailsSheet extends StatelessWidget {
 
             const Text(
               'Items',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 12),
@@ -295,94 +394,149 @@ class _OrderDetailsSheet extends StatelessWidget {
                 ),
               ),
               child: Column(
-                children: order.items.map(
-                  (item) {
-                    return Padding(
-                      padding: const EdgeInsets.only(
-                        bottom: 14,
-                      ),
-                      child: Row(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
-                        children: [
-                          ClipRRect(
-                            borderRadius:
-                                BorderRadius.circular(9),
-                            child: Image.network(
-                              item.book.coverUrl,
-                              width: 54,
-                              height: 70,
-                              fit: BoxFit.cover,
-                              errorBuilder:
-                                  (_, _, _) {
-                                return Container(
-                                  width: 54,
-                                  height: 70,
-                                  color: Theme.of(context).colorScheme.outlineVariant,
-                                  child: Icon(
-                                    Icons
-                                        .menu_book_rounded,
-                                    color:
-                                        Theme.of(context).colorScheme.onSurfaceVariant,
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  item.book.title,
-                                  maxLines: 2,
-                                  overflow:
-                                      TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontWeight:
-                                        FontWeight.w600,
-                                    fontSize: 13,
-                                  ),
+                children: order.items.map((item) {
+                  final ebook = _availableEbooks[item.book.id];
+                  final isBusy = _busyBookIds.contains(item.book.id);
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 14),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(9),
+                          child: Image.network(
+                            item.book.coverUrl,
+                            width: 54,
+                            height: 70,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) {
+                              return Container(
+                                width: 54,
+                                height: 70,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .outlineVariant,
+                                child: Icon(
+                                  Icons.menu_book_rounded,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
                                 ),
-                                const SizedBox(height: 5),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item.book.title,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              if (item.book.author.isNotEmpty) ...[
+                                const SizedBox(height: 3),
                                 Text(
-                                  'Qty: ${item.quantity}',
+                                  'by ${item.book.author}',
                                   style: TextStyle(
-                                    color:
-                                        Theme.of(context).colorScheme.onSurfaceVariant,
-                                    fontSize: 11,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                    fontSize: 12,
                                   ),
                                 ),
                               ],
-                            ),
+                              const SizedBox(height: 5),
+                              Text(
+                                '${item.quantity} × ₦${item.book.price.toStringAsFixed(0)}',
+                                style: TextStyle(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                  fontSize: 11,
+                                ),
+                              ),
+                              if (ebook != null) ...[
+                                const SizedBox(height: 10),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: [
+                                    FilledButton.tonalIcon(
+                                      onPressed: isBusy
+                                          ? null
+                                          : () => _readBook(ebook),
+                                      icon: const Icon(
+                                        Icons.menu_book_outlined,
+                                      ),
+                                      label: Text(
+                                        isBusy ? 'Opening…' : 'Read in app',
+                                      ),
+                                    ),
+                                    OutlinedButton.icon(
+                                      onPressed: isBusy
+                                          ? null
+                                          : () => _downloadBook(ebook),
+                                      icon: const Icon(Icons.download_rounded),
+                                      label: const Text('Download'),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ],
                           ),
-                          const SizedBox(width: 10),
-                          Text(
-                            '₦${item.totalPrice.toStringAsFixed(0)}',
-                            style: const TextStyle(
-                              color: AppColors.burgundy,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          '₦${item.totalPrice.toStringAsFixed(0)}',
+                          style: const TextStyle(
+                            color: AppColors.burgundy,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
                           ),
-                        ],
-                      ),
-                    );
-                  },
-                ).toList(),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
               ),
             ),
+
+            const SizedBox(height: 8),
+
+            if (_loadingEbooks)
+              const LinearProgressIndicator()
+            else if (_ebookError != null)
+              Text(
+                'Could not check ebook access: $_ebookError',
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              )
+            else if (order.displayPaymentStatus != 'Paid')
+              Text(
+                'Read and download options appear here after payment is confirmed.',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              )
+            else if (_availableEbooks.isEmpty)
+              Text(
+                'No ebook file is available for the books in this order yet.',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
 
             const SizedBox(height: 20),
 
             const Text(
               'Payment & Delivery',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 12),
@@ -398,22 +552,16 @@ class _OrderDetailsSheet extends StatelessWidget {
               ),
               child: Column(
                 children: [
+                  _InfoRow(label: 'Payment', value: order.paymentMethod),
                   _InfoRow(
-                    label: 'Payment',
-                    value: order.paymentMethod,
+                    label: 'Payment status',
+                    value: order.displayPaymentStatus,
                   ),
-                  _InfoRow(
-                    label: 'Name',
-                    value: order.customerName,
-                  ),
-                  _InfoRow(
-                    label: 'Phone',
-                    value: order.phone,
-                  ),
+                  _InfoRow(label: 'Name', value: order.customerName),
+                  _InfoRow(label: 'Phone', value: order.phone),
                   _InfoRow(
                     label: 'Address',
-                    value:
-                        '${order.address}, ${order.city}',
+                    value: '${order.address}, ${order.city}',
                     showDivider: false,
                   ),
                 ],
@@ -424,10 +572,7 @@ class _OrderDetailsSheet extends StatelessWidget {
 
             const Text(
               'Order Summary',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 12),
@@ -445,27 +590,22 @@ class _OrderDetailsSheet extends StatelessWidget {
                 children: [
                   _SummaryRow(
                     label: 'Subtotal',
-                    value:
-                        '₦${order.subtotal.toStringAsFixed(0)}',
+                    value: '₦${order.subtotal.toStringAsFixed(0)}',
                   ),
                   const SizedBox(height: 9),
                   _SummaryRow(
                     label: 'Delivery',
-                    value:
-                        '₦${order.deliveryFee.toStringAsFixed(0)}',
+                    value: '₦${order.deliveryFee.toStringAsFixed(0)}',
                   ),
                   Padding(
-                    padding: EdgeInsets.symmetric(
-                      vertical: 12,
-                    ),
+                    padding: EdgeInsets.symmetric(vertical: 12),
                     child: Divider(
                       color: Theme.of(context).colorScheme.outlineVariant,
                     ),
                   ),
                   _SummaryRow(
                     label: 'Total',
-                    value:
-                        '₦${order.total.toStringAsFixed(0)}',
+                    value: '₦${order.total.toStringAsFixed(0)}',
                     isTotal: true,
                   ),
                 ],
@@ -491,12 +631,7 @@ class _OrderDetailsSheet extends StatelessWidget {
   }
 
   Widget _buildTrackingCard(BuildContext context) {
-    final steps = [
-      'Processing',
-      'Shipped',
-      'Out for Delivery',
-      'Delivered',
-    ];
+    final steps = ['Processing', 'Shipped', 'Out for Delivery', 'Delivered'];
 
     final currentIndex = steps.indexOf(order.status);
 
@@ -505,85 +640,71 @@ class _OrderDetailsSheet extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant,
-        ),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'Delivery Status',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
           ),
           const SizedBox(height: 18),
-          ...List.generate(
-            steps.length,
-            (index) {
-              final isCompleted =
-                  index <= currentIndex;
-              final isLast =
-                  index == steps.length - 1;
+          ...List.generate(steps.length, (index) {
+            final isCompleted = index <= currentIndex;
+            final isLast = index == steps.length - 1;
 
-              return Row(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
-                children: [
-                  Column(
-                    children: [
-                      Container(
-                        width: 26,
-                        height: 26,
-                        decoration: BoxDecoration(
-                          color: isCompleted
-                              ? AppColors.burgundy
-                              : Theme.of(context).colorScheme.outlineVariant,
-                          shape: BoxShape.circle,
-                        ),
-                        child: isCompleted
-                            ? const Icon(
-                                Icons.check_rounded,
-                                color:
-                                    AppColors.white,
-                                size: 16,
-                              )
-                            : null,
-                      ),
-                      if (!isLast)
-                        Container(
-                          width: 2,
-                          height: 30,
-                          color: index < currentIndex
-                              ? AppColors.burgundy
-                              : Theme.of(context).colorScheme.outlineVariant,
-                        ),
-                    ],
-                  ),
-                  const SizedBox(width: 12),
-                  Padding(
-                    padding:
-                        const EdgeInsets.only(top: 3),
-                    child: Text(
-                      steps[index],
-                      style: TextStyle(
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Column(
+                  children: [
+                    Container(
+                      width: 26,
+                      height: 26,
+                      decoration: BoxDecoration(
                         color: isCompleted
-                            ? Theme.of(context).colorScheme.onSurface
-                            : Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontWeight: isCompleted
-                            ? FontWeight.w600
-                            : FontWeight.normal,
-                        fontSize: 13,
+                            ? AppColors.burgundy
+                            : Theme.of(context).colorScheme.outlineVariant,
+                        shape: BoxShape.circle,
                       ),
+                      child: isCompleted
+                          ? const Icon(
+                              Icons.check_rounded,
+                              color: AppColors.white,
+                              size: 16,
+                            )
+                          : null,
+                    ),
+                    if (!isLast)
+                      Container(
+                        width: 2,
+                        height: 30,
+                        color: index < currentIndex
+                            ? AppColors.burgundy
+                            : Theme.of(context).colorScheme.outlineVariant,
+                      ),
+                  ],
+                ),
+                const SizedBox(width: 12),
+                Padding(
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Text(
+                    steps[index],
+                    style: TextStyle(
+                      color: isCompleted
+                          ? Theme.of(context).colorScheme.onSurface
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontWeight: isCompleted
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                      fontSize: 13,
                     ),
                   ),
-                ],
-              );
-            },
-          ),
+                ),
+              ],
+            );
+          }),
         ],
       ),
     );
@@ -606,12 +727,9 @@ class _InfoRow extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(
-            vertical: 9,
-          ),
+          padding: const EdgeInsets.symmetric(vertical: 9),
           child: Row(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(
                 width: 70,
@@ -669,8 +787,7 @@ class _SummaryRow extends StatelessWidget {
                 ? Theme.of(context).colorScheme.onSurface
                 : Theme.of(context).colorScheme.onSurfaceVariant,
             fontSize: isTotal ? 16 : 13,
-            fontWeight:
-                isTotal ? FontWeight.bold : FontWeight.normal,
+            fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
           ),
         ),
         const Spacer(),
@@ -692,9 +809,7 @@ class _SummaryRow extends StatelessWidget {
 class _StatusBadge extends StatelessWidget {
   final String status;
 
-  const _StatusBadge({
-    required this.status,
-  });
+  const _StatusBadge({required this.status});
 
   @override
   Widget build(BuildContext context) {
@@ -703,34 +818,27 @@ class _StatusBadge extends StatelessWidget {
 
     switch (status) {
       case 'Shipped':
-        background =
-            AppColors.burgundy.withValues(alpha: 0.10);
+        background = AppColors.burgundy.withValues(alpha: 0.10);
         foreground = AppColors.burgundy;
         break;
 
       case 'Out for Delivery':
-        background =
-            Colors.orange.withValues(alpha: 0.10);
+        background = Colors.orange.withValues(alpha: 0.10);
         foreground = Colors.orange.shade800;
         break;
 
       case 'Delivered':
-        background =
-            AppColors.success.withValues(alpha: 0.10);
+        background = AppColors.success.withValues(alpha: 0.10);
         foreground = AppColors.success;
         break;
 
       default:
-        background =
-            AppColors.brown.withValues(alpha: 0.10);
+        background = AppColors.brown.withValues(alpha: 0.10);
         foreground = AppColors.brown;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 9,
-        vertical: 5,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(8),
@@ -754,9 +862,7 @@ class _EmptyOrders extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 32,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -764,9 +870,7 @@ class _EmptyOrders extends StatelessWidget {
               width: 96,
               height: 96,
               decoration: BoxDecoration(
-                color: AppColors.burgundy.withValues(
-                  alpha: 0.08,
-                ),
+                color: AppColors.burgundy.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -779,12 +883,8 @@ class _EmptyOrders extends StatelessWidget {
             Text(
               'No orders yet',
               textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleLarge
-                  ?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(context).textTheme.titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             Text(

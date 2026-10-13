@@ -18,8 +18,11 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = const [
-    HomeScreen(),
+  static final GlobalKey<_MainShellState> globalKey =
+      GlobalKey<_MainShellState>();
+
+  late final List<Widget> _screens = [
+    HomeScreen(onSearchTap: () => _selectPage(1)),
     SearchScreen(),
     WishlistScreen(),
     CartScreen(),
@@ -68,15 +71,11 @@ class _MainShellState extends State<MainShell> {
             children: [
               if (isDesktop) _buildDesktopNavigation(),
               Expanded(
-                child: IndexedStack(
-                  index: _currentIndex,
-                  children: _screens,
-                ),
+                child: IndexedStack(index: _currentIndex, children: _screens),
               ),
             ],
           ),
-          bottomNavigationBar:
-              isDesktop ? null : _buildMobileNavigation(),
+          bottomNavigationBar: isDesktop ? null : _buildMobileNavigation(),
         );
       },
     );
@@ -85,18 +84,11 @@ class _MainShellState extends State<MainShell> {
   Widget _buildMobileNavigation() {
     final cartCount = CartService.instance.itemCount;
 
-    final destinations = List<Widget>.from(
-      _mobileDestinations,
-    );
+    final destinations = List<Widget>.from(_mobileDestinations);
 
     destinations[3] = NavigationDestination(
-      icon: _CartIcon(
-        count: cartCount,
-      ),
-      selectedIcon: _CartIcon(
-        count: cartCount,
-        selected: true,
-      ),
+      icon: _CartIcon(count: cartCount),
+      selectedIcon: _CartIcon(count: cartCount, selected: true),
       label: 'Cart',
     );
 
@@ -108,9 +100,7 @@ class _MainShellState extends State<MainShell> {
         });
       },
       backgroundColor: Theme.of(context).colorScheme.surface,
-      indicatorColor: AppColors.burgundy.withValues(
-        alpha: 0.10,
-      ),
+      indicatorColor: AppColors.burgundy.withValues(alpha: 0.10),
       elevation: 0,
       destinations: destinations.cast<NavigationDestination>(),
     );
@@ -131,10 +121,7 @@ class _MainShellState extends State<MainShell> {
       ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 14,
-            vertical: 18,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
           child: Column(
             children: [
               _buildBrandHeader(),
@@ -307,24 +294,17 @@ class _DesktopNavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(
-        bottom: 6,
-      ),
+      padding: const EdgeInsets.only(bottom: 6),
       child: Material(
         color: selected
-            ? AppColors.burgundy.withValues(
-                alpha: 0.08,
-              )
+            ? AppColors.burgundy.withValues(alpha: 0.08)
             : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(12),
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 12,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             child: Row(
               children: [
                 Icon(
@@ -342,9 +322,7 @@ class _DesktopNavItem extends StatelessWidget {
                       color: selected
                           ? AppColors.burgundy
                           : Theme.of(context).colorScheme.onSurface,
-                      fontWeight: selected
-                          ? FontWeight.w600
-                          : FontWeight.w500,
+                      fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                       fontSize: 14,
                     ),
                   ),
@@ -386,10 +364,7 @@ class _CartIcon extends StatelessWidget {
   final int count;
   final bool selected;
 
-  const _CartIcon({
-    required this.count,
-    this.selected = false,
-  });
+  const _CartIcon({required this.count, this.selected = false});
 
   @override
   Widget build(BuildContext context) {
@@ -397,23 +372,15 @@ class _CartIcon extends StatelessWidget {
       clipBehavior: Clip.none,
       children: [
         Icon(
-          selected
-              ? Icons.shopping_cart_rounded
-              : Icons.shopping_cart_outlined,
+          selected ? Icons.shopping_cart_rounded : Icons.shopping_cart_outlined,
         ),
         if (count > 0)
           Positioned(
             right: -9,
             top: -8,
             child: Container(
-              constraints: const BoxConstraints(
-                minWidth: 17,
-                minHeight: 17,
-              ),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 4,
-                vertical: 2,
-              ),
+              constraints: const BoxConstraints(minWidth: 17, minHeight: 17),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
               decoration: const BoxDecoration(
                 color: AppColors.burgundy,
                 shape: BoxShape.circle,

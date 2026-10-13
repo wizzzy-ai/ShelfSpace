@@ -12,6 +12,8 @@ class Book {
   final bool isBestseller;
   final bool isNewArrival;
   final bool isFeatured;
+  final bool hasEbook;
+  final String? ebookFormat;
 
   const Book({
     required this.id,
@@ -27,6 +29,8 @@ class Book {
     this.isBestseller = false,
     this.isNewArrival = false,
     this.isFeatured = false,
+    this.hasEbook = false,
+    this.ebookFormat,
   });
 
   Book copyWith({
@@ -43,6 +47,8 @@ class Book {
     bool? isBestseller,
     bool? isNewArrival,
     bool? isFeatured,
+    bool? hasEbook,
+    String? ebookFormat,
   }) {
     return Book(
       id: id ?? this.id,
@@ -58,6 +64,8 @@ class Book {
       isBestseller: isBestseller ?? this.isBestseller,
       isNewArrival: isNewArrival ?? this.isNewArrival,
       isFeatured: isFeatured ?? this.isFeatured,
+      hasEbook: hasEbook ?? this.hasEbook,
+      ebookFormat: ebookFormat ?? this.ebookFormat,
     );
   }
 }

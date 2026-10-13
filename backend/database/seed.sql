@@ -182,6 +182,17 @@ WHERE (b.title = 'Things Fall Apart' AND g.name IN ('Fiction', 'Historical Ficti
    OR (b.title = 'Becoming' AND g.name IN ('Biography & Memoir'))
    OR (b.title = 'Educated' AND g.name IN ('Biography & Memoir'));
 
+-- Populate the flags used by the Home screen shelves.
+UPDATE Books
+SET isBestseller = (soldCount >= 150),
+    isFeatured = (soldCount >= 200),
+    isNewArrival = title IN (
+      'Children of Blood and Bone',
+      'Atomic Habits',
+      'The Psychology of Money',
+      'Becoming',
+      'Educated'
+    );
 
 SELECT COUNT(*) AS totalBooks FROM Books;
 
